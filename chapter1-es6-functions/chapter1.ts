@@ -15,10 +15,10 @@ const users1 = [
 // TODO: return only names
 
 const ex2 = users1.map((user) => user.name);
-// const doubleAge = users1.map((user) => ({
-//   user.name,
-//   doubleAge: user.age * 2
-// })
+const doubleAge = users1.map((user) => ({
+  name: user.name,
+  doubleAge: user.age * 2 })
+)
 console.log(ex2);
 
 const numbers2 = [1, 6, 3, 8, 2];
@@ -44,10 +44,54 @@ console.log(ex5);
 
 const letters = ["a", "b", "a", "c", "a"];
 // TODO: count occurrences
+ const ex6 = letters.reduce((accumulator, currentValue) =>  {
+   if (accumulator[currentValue]) {
+     accumulator[currentValue] = accumulator[currentValue] + 1;
+   } else {
+     accumulator[currentValue] = 1;
+   }
+   return accumulator;
+ }, {})
 
-// const ex6 = letters.reduce((acc, letters) => ({
-//   acc[letter]
-// }))
+// First loop:
+// accumulator = {}, currentValue = a
+// { a: 1 }
+
+//Second loop
+// accumulator = { a: 1 }, currentValue: b
+// accumulator = { a:1, b: 1 }
+
+// Third loop
+// accumulator = { a: 1, b: 1 }, currentValue: a
+// accumulator = { a: 2, b: 1 }
+console.log('ex6', ex6);
+
+const users10 = [
+    { name: "Bob", age: 30 },
+  { name: "John", age: 25 },
+  { name: "Alice", age: 10 },
+]
+
+// get only the adults names (+18 age) ['Bob', 'John']
+
+/** const ex10 = users10.filter(user => user.age >= 18)
+    .map((user) => user.name); **/
+
+const ex10Reduce = users10.reduce((acc, curr) => {
+  if (curr.age >= 18) {
+    acc.push(curr.name);
+  }
+  return acc;
+}, []);
+
+// users10.some(user => user.age >= 18)
+const hasUserAdult = users10.reduce((acc, curr) => {
+  return acc || (curr.age >= 18);
+}, false)
+
+console.log('hasUserAdult', hasUserAdult)
+
+console.log('ex10Reduce', ex10Reduce)
 
 const numbers4 = [5, 12, 8, 130];
 // TODO: find first number > 10
