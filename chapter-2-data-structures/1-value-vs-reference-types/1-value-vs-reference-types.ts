@@ -1,4 +1,41 @@
 // Value vs Reference Practice
+let a = 1;
+let b = 2;
+a = b;
+
+a = 3;
+
+console.log('a', a)
+console.log('b', b)
+
+let objA = { name: 'Alice' } // ref: uuid1, value: { name: 'Alice' }
+let objB =  { name: 'Alice' } // ref: uuid2, value: { name: 'Alice' }
+
+let arrayA = ['Alice'];
+let arrayB = ['Alice'];
+
+console.log('are objects equals', objA == objB)
+console.log('are arrays equals', arrayA == arrayB)
+
+objA = objB;
+console.log('are objects equals after assignment', objA == objB)
+
+let user1 = { name: 'Alice' } // ref: uuid1, value: { name: 'Alice' }
+let user2 =  { name: 'Bob' } // ref: uuid2, value: { name: 'Bob' }
+
+user1 = user2;
+// user1 // ref: uuid2, value: { name: 'Bob' }
+// user2 // ref: uuid2, value: { name: 'Bob' }
+
+user1.name = 'Alice';
+console.log(user1, user2)
+
+
+let x = 2;
+let y = "2";
+// === for type and value but == is only for value
+
+// const alias = [...users]
 
 // 1. Check if a config value (currency code, locale, etc.) is a primitive.
 export function isPrimitive(value: unknown): boolean {
