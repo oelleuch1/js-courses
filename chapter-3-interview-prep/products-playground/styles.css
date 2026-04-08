@@ -1,0 +1,80 @@
+/* Page background from the challenge */
+body {
+  background: #f0f2f4;
+  margin: 0;
+}
+
+/* Local dev convenience — not specified in the challenge doc */
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+#app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/*
+ * UI chrome matching the challenge screenshots.
+ * Lives here because ProductsComponent uses light DOM (createRenderRoot).
+ */
+products-component {
+  display: block;
+  padding: 16px;
+  background: #fff;
+}
+
+.products-heading {
+  margin: 0 0 16px;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.products-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.products-actions button {
+  font: inherit;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.products-pagination {
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.products-pagination a {
+  color: #0000ee;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.products-pagination__ellipsis {
+  color: #0000ee;
+  user-select: none;
+}
+
+.products-list {
+  margin-top: 8px;
+}
+
+/* Layout helpers for ProductDetails markup (not in the Lit static styles snippet) */
+.product-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.product-property {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
