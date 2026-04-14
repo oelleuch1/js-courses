@@ -57,7 +57,7 @@ export class ProductDetails extends LitElement {
             Rating
           </div>
           <div>
-            ${this.product.rating.rate}
+            5
           </div>
         </div>
       </div>
@@ -78,6 +78,15 @@ export class ProductsComponent extends LitElement {
     sortOrder: {
       type: String,
     },
+    size: {
+      type: Number,
+    },
+    index: {
+      type: Number,
+    },
+    count: {
+      Number,
+    }
   };
 
   /** Filled in the challenge; start empty like the document. */
@@ -88,21 +97,35 @@ export class ProductsComponent extends LitElement {
     this.products = [];
     this.title = 'All ';
     this.sortOrder = 'desc';
+    this.size = 3;
+    this.index = 0;
   }
 
 
   /****************************************************************************
    * TODO 1: debug and fix the following code to render a list of product details
    ****************************************************************************/
-  firstUpdated() {
-    const data = fetch('https://fakestoreapi.com/products?size=3&page=0');
-    this.products = data.content;
+  // https://jsonplaceholder.typicode.com/posts??_page=1&_limit=10
+
+  fetchProducts(size, index) {
+    fetch(`https://jsonplaceholder.typicode.com/posts??_page=${index}&_limit=${size}`)
+      .then((response) => response.json())
+      .then((data) => { this.products = Array.isArray(data) ? data : [] })
   }
 
   firstUpdated() {
-    fetch('https://fakestoreapi.com/products?size=3&page=0')
-      .then((response) => response.json())
-      .then((data) => this.products = data)
+    this.fetchProducts(this.size, this.index);
+  }
+
+
+  handleClick(event, newPageIndex) {
+    event.preventDefault();
+    this.index = newPageIndex;
+    this.fetchProducts(this.size, this.index)
+  }
+
+  handleSize(option) {
+    console.log(option)
   }
 
   /****************************************************************************
@@ -110,8 +133,27 @@ export class ProductsComponent extends LitElement {
    * the Sort button is pressed (discussion: whole list vs current page).
    ****************************************************************************/
   sort() {
-    console.log('Sorted products');
+    this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+
+    this.products = this.products.toSorted((a, b) => {
+      if (this.sortOrder === 'asc') {
+        return b.price < a.price ? 1 : -1
+      } else {
+        return b.price > a.price ? 1 : -1
+      }
+    }
+
+    )
+
+
   }
+  // if local - sorting is for the cur
+
+  // updateSize(e) {
+  //   this.index = 0;
+  //   this.size = e.target.value;
+  //   this.fetchProducts(this.size, this.index);
+  // }
 
   render() {
     return html`
@@ -123,12 +165,19 @@ export class ProductsComponent extends LitElement {
       </div>
 
       <nav class="products-pagination" aria-label="Pagination">
-        <a href="#">1</a>
-        <a href="#">2</a>
-        <a href="#">3</a>
+      ${Array.from({ length: 10 }).map((_, index) => html`
+        <a href="#" @click=${(event) => this.handleClick(event, index)}>${index + 1}</a>
+      `)}
         <span class="products-pagination__ellipsis">...</span>
         <a href="#">last</a>
       </nav>
+
+
+      ${html`<select name="size" @change="${(e) => this.updateSize(e)}">
+        <option value="3">3</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+      </select>`}
 
       <div class="products-list">
         ${this.products.map(

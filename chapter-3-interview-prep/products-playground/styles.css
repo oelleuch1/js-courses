@@ -6,7 +6,12 @@ body {
 
 /* Local dev convenience — not specified in the challenge doc */
 body {
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 }
 
 #app {
