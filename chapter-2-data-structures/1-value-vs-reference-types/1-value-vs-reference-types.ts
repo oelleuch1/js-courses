@@ -1,6 +1,6 @@
 // Value vs Reference Practice
 let a = 1;
-let b = 2;
+let b = 2; //(value)
 a = b;
 
 a = 3;
@@ -9,7 +9,13 @@ console.log('a', a)
 console.log('b', b)
 
 let objA = { name: 'Alice' } // ref: uuid1, value: { name: 'Alice' }
-let objB =  { name: 'Alice' } // ref: uuid2, value: { name: 'Alice' }
+let objB =  { name: 'Alice' }; // newRef
+// (ref, value)
+
+objB.name = 'Bob';
+// objA.name = 'Bob
+
+console.log(objA === objB); // compare the ref not the value;
 
 let arrayA = ['Alice'];
 let arrayB = ['Alice'];
@@ -35,11 +41,36 @@ let x = 2;
 let y = "2";
 // === for type and value but == is only for value
 
-// const alias = [...users]
+
+const users = ['Alice'];
+
+const alias = [...users];
+alias.push('Bob');
+
+
+
+const usersObjs = [ { name: 'Alice' } ];
+
+const aliasObjs = structuredClone(usersObjs);
+aliasObjs[0].name = 'Bob'
+
+// if aliasObjs is a new copy of usersObjs 
+console.log({ usersObjs, aliasObjs })
+
+
+const userAObj = {
+  value: 'userA',
+  person: { name: 'Alice' }
+ }
+
+const userBObj = { ...userAObj };
+userBObj.person.name = 'Bob'
+userBObj.value = 'userB'
+
+console.log({ userAObj, userBObj })
 
 // 1. Check if a config value (currency code, locale, etc.) is a primitive.
 export function isPrimitive(value: unknown): boolean {
-  // TODO: implement
   return false;
 }
 
