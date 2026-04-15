@@ -93,6 +93,9 @@ export function shallowCopyProfile<T extends object>(profile: T): T {
 }
 
 console.log(shallowCopyProfile({ name: "Tom" }), "shallowCopyProfile");
+type Person = string
+
+shallowCopyProfile({ name: 'Alice' });
 
 // 3. Deep-clone a checkout payload before sending it to the payments API.
 export function deepClonePayload<T>(payload: T): T {

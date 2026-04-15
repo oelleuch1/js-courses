@@ -1,120 +1,160 @@
-# Common Reference Types (with Enums)
+# Common Types and Utility Types
 
 ## What You Will Learn
 
-- Core JS/TS reference types used daily.
-- When to pick each type.
-- Typical methods and pitfalls.
-- When to reach for enums vs union literals.
+- How to use `Map`, `Set`, `interface`, and utility types in product code.
+- How to model API and feature states with union/intersection and literal types.
+- How to shape existing types with `Pick`, `Omit`, `Readonly`, `Partial`, and `Record`.
+- Where to use `unknown`, `never`, and `void` safely.
+- How to choose the right type for runtime data flows.
 
 ---
 
 ## Map
 
-**Utility**: Key/value store with any key type, preserves insertion order.  
-**Core methods**: `set`, `get`, `has`, `delete`, `forEach`.
+**Utility**: Key/value store with stable insertion order and non-string keys.
+**Feature usage**: caches, indexing, counters, grouped analytics.
 
 ```ts
-const roles = new Map<number, string>([[1, "admin"]]);
-roles.set(2, "editor");
+const inventory = new Map<string, number>();
+inventory.set("sku-1", 10);
 ```
 
 ---
 
 ## Set
 
-**Utility**: Unique collection with fast membership checks.  
-**Core methods**: `add`, `has`, `delete`, `size`.
+**Utility**: Unique value collection with fast lookup.
+**Feature usage**: deduping ids, active sessions, toggles, allow/block lists.
 
 ```ts
-const visited = new Set(["home", "about"]);
-visited.add("contact");
-```
-
----
-
-## Class
-
-**Utility**: Blueprint for objects with shared state and behavior.  
-**Notes**: Supports access modifiers, inheritance, and `implements` for interfaces.
-
-```ts
-class Course {
-  constructor(public title: string, private enrolled = 0) {}
-  enroll() { this.enrolled += 1; }
-}
+const onlineUsers = new Set<string>();
+onlineUsers.add("u-10");
 ```
 
 ---
 
 ## Interface
 
-**Utility**: Type-only contract describing object shapes.  
-**Notes**: Extensible and can be merged across declarations.
+**Utility**: Contract for object shape.
+**Feature usage**: API contracts, domain entities, config objects.
 
 ```ts
-interface Identified { id: string; }
-interface Student extends Identified { name: string; skills: string[]; }
+interface UserProfile {
+  id: string;
+  email: string;
+  role: "admin" | "member";
+}
 ```
 
 ---
 
-## Date
+## Special Types
 
-**Utility**: Legacy mutable date/time object (millisecond precision).  
-**Tip**: Store timestamps in UTC; avoid mutating shared `Date` instances.
+### Union Types
+
+Use when a value can be one of several valid shapes.
 
 ```ts
-const now = new Date();
-const ms = now.getTime();
+type ApiResult = { ok: true; data: string } | { ok: false; error: string };
+```
+
+### Intersection Types
+
+Use when an object must satisfy multiple contracts.
+
+```ts
+type Audited = { updatedAtMs: number };
+type User = { id: string; email: string };
+type AuditedUser = User & Audited;
+```
+
+### Literal Types
+
+Use for strict allowed values.
+
+```ts
+type Env = "dev" | "staging" | "prod";
+```
+
+### Tuple Types
+
+Use for ordered fixed-size values.
+
+```ts
+type GeoPoint = [lat: number, lng: number];
 ```
 
 ---
 
-## Promise
+## Utility Types
 
-**Utility**: Represents the eventual result of an async operation.  
-**Patterns**: `await`, chaining, `Promise.all` / `allSettled` / `race`.
+### `Pick<T, K>`
+
+Use when you want a smaller view of an existing type.
 
 ```ts
-const data = fetch("/api/user").then(r => r.json());
+interface UserProfile {
+  id: string;
+  email: string;
+  role: "admin" | "member";
+  createdAtMs: number;
+}
+
+type UserContact = Pick<UserProfile, "id" | "email">;
 ```
 
----
+### `Omit<T, K>`
 
-## Error
-
-**Utility**: Conveys failure information.  
-**Common types**: `Error`, `TypeError`, `RangeError`, `SyntaxError`, `AggregateError`.
+Use when you want to remove fields from an existing type.
 
 ```ts
-throw new TypeError("Expected number");
+type CreateUserInput = Omit<UserProfile, "id" | "createdAtMs">;
 ```
 
----
+### `Readonly<T>`
 
-## Function
-
-**Utility**: First-class callable objects; can carry properties.  
-**Types**: Plain functions, arrow functions, generators, async functions.
+Use when data should not be mutated after creation.
 
 ```ts
-type Mapper = (input: number) => number;
-const double: Mapper = x => x * 2;
+type FrozenUser = Readonly<UserProfile>;
 ```
 
----
+### `Partial<T>`
 
-## Enum
-
-**Utility**: Small, fixed set of runtime values with strong typing.  
-**Kinds**: Numeric (reverse lookup) and string (stable payloads).  
-**Patterns**: Feature flags via bit masks, exhaustive switches for state machines.
+Use for patch/update payloads where every field is optional.
 
 ```ts
-enum CourseStage { Draft = "draft", Published = "published" }
-function isPublished(stage: CourseStage) {
-  return stage === CourseStage.Published;
+type UserPatch = Partial<UserProfile>;
+```
+
+### `Record<K, V>`
+
+Use for dictionary-like objects with known key shape.
+
+```ts
+type FeatureFlags = Record<"search" | "checkout", boolean>;
+```
+
+### `unknown`
+
+Use for external/unsafe input, then narrow with checks.
+
+```ts
+function parsePayload(payload: unknown) {
+  if (typeof payload === "object" && payload !== null) {
+    return payload;
+  }
+}
+```
+
+### `void`
+
+Use for functions that do not return meaningful values.
+
+```ts
+function logEvent(message: string): void {
+  console.log(message);
 }
 ```
 
@@ -122,14 +162,26 @@ function isPublished(stage: CourseStage) {
 
 ## Quick Selection Guide
 
-| Need                               | Choose      | Reason                         |
-| ---------------------------------- | ----------- | ------------------------------ |
-| Key/value with non-string keys     | Map         | Flexible keys, ordered         |
-| Unique values + fast lookup        | Set         | Membership O(1)                |
-| Shared behavior + state            | Class       | Methods + encapsulation        |
-| Documented shape only              | Interface   | Compile-time contract          |
-| Timestamps                         | Date        | Built-in parsing/math helpers  |
-| Async result                       | Promise     | Composable async abstraction   |
-| Reporting failures                 | Error       | Carries message + stack        |
-| Reusable behavior chunk            | Function    | First-class callables          |
-| Small, shared state machine/flags  | Enum        | Runtime object + type safety   |
+| Need | Choose | Reason |
+| ---- | ------ | ------ |
+| Fast lookup by key | `Map<K, V>` | Key flexibility and explicit API |
+| Uniqueness and membership checks | `Set<T>` | O(1)-like membership semantics |
+| Shared object shape contract | `interface` | Clear and composable contracts |
+| Small type view from existing model | `Pick<T, K>` | Reuse source type safely |
+| Remove fields from existing model | `Omit<T, K>` | Avoid duplicating object types |
+| Immutable object contract | `Readonly<T>` | Prevent accidental mutation |
+| Patch/update payload | `Partial<T>` | Makes all fields optional |
+| Dictionary with known keys | `Record<K, V>` | Simple object-based lookup |
+| Multiple possible states | `union` | Models real state machines |
+| Compose contracts | `intersection` | Merge responsibilities safely |
+| Validate external input | `unknown` | Safe narrowing before usage |
+| Enforce exhaustive switch | `never` | Prevent missing cases |
+
+---
+
+## Next Step
+
+Open the exercises file and complete:
+
+- 10 feature-driven exercises using common types and utility types
+- 2 bigger design problems where you choose the right type shape yourself

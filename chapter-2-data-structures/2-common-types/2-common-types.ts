@@ -1,244 +1,180 @@
 /**
- * Practice Set: Common Reference Types (Map, Set, Class, Enum, Function)
- * Product-oriented scenarios: analytics, commerce, permissions, reliability.
- * Difficulty buckets: 4 Easy, 4 Medium, 4 Senior, 1 Lead.
- * Implement the TODOs with working solutions.
+ * Practice Set: Common Types and Utility Types
+ * Complete TODOs with type-safe implementations.
+ * - 10 feature-driven exercises
+ * - 2 larger design problems (without classes)
  */
-
 
 /**
- * Analytics: return unique app screens visited in the order first seen.
+ * EXERCISE 1
+ * Analytics: return distinct page ids visited in first-seen order.
  */
-export function collectUniqueScreens(screens: string[]): Set<string> {
-  // TODO: build a Set from the array
+export function uniqueVisitedPages(pageIds: string[]): Set<string> {
+  // TODO
   throw new Error("TODO");
 }
 
 /**
- * Provisioning: pair user ids with role names into a Map.
- * If arrays differ in length, ignore the extras.
+ * EXERCISE 2
+ * Billing: merge two invoice amount maps by invoice id.
+ * If id exists in both maps, sum values.
  */
-export function mapUserRoles(ids: number[], roles: string[]): Map<number, string> {
-  // TODO: zip ids -> roles using a Map
-  throw new Error("TODO");
-}
-
-/**
- * Checkout funnel: simple state machine for next step.
- */
-export enum CheckoutStep {
-  Browse = "browse",
-  Cart = "cart",
-  Payment = "payment",
-  Confirmation = "confirmation",
-}
-
-export function nextCheckoutStep(step: CheckoutStep): CheckoutStep {
-  // TODO: advance through the funnel; wrap from Confirmation back to Browse
-  throw new Error("TODO");
-}
-
-/**
- * Observability: measure API latency.
- */
-export class ResponseTimer {
-  constructor(private readonly startedAt: Date = new Date()) {}
-
-  elapsedMs(at: Date = new Date()): number {
-    // TODO: return milliseconds between startedAt and at
-    throw new Error("TODO");
-  }
-}
-
-
-/**
- * Commerce: merge two warehouse inventory Maps, summing quantities by SKU.
- * Do not mutate the inputs.
- */
-export function mergeInventories(
-  primary: Map<string, number>,
-  secondary: Map<string, number>
+export function mergeInvoiceTotals(
+  firstInvoice: Map<string, number>,
+  secondInvoice: Map<string, number>
 ): Map<string, number> {
-  // TODO: produce a new Map with summed quantities
+  // TODO
   throw new Error("TODO");
 }
 
 /**
- * Profiles: build a lookup Map keyed by `id` from an array of user snapshots.
- * Later items with the same id overwrite earlier ones.
+ * EXERCISE 4
+ * Utility type: create a compact contact card from a full customer model.
+ * Use `Pick`.
  */
-export function indexUsers<T extends { id: string }>(items: T[]): Map<string, T> {
-  // TODO: create Map<string, T> from items
+export interface CustomerContactSource {
+  id: string;
+  email: string;
+  name: string;
+  plan: "free" | "pro" | "enterprise";
+  createdAtMs: number;
+}
+
+export function mapCustomerSourceToCustomerContact(
+  customer: CustomerContactSource
+): Pick<CustomerContactSource, "id" | "email" | "name"> {
+  // TODO
   throw new Error("TODO");
 }
 
 /**
- * Retention: given active subscribers and a set of churned users, return who
- * remains subscribed.
+ * EXERCISE 5
+ * Utility type: remove internal fields from a customer record before returning it to the client.
+ * Use `Omit`.
  */
-export function subtractChurned(
-  active: Set<string>,
-  churned: Set<string>
-): Set<string> {
-  // TODO: return a new Set without the churned names
+export interface Customer {
+  id: string;
+  email: string;
+  name: string;
+  plan: "free" | "pro" | "enterprise";
+  internalNotes: string;
+  createdAtMs: number;
+}
+
+export function toPublicCustomer(
+  customer: Customer
+): Omit<Customer, "internalNotes"> {
+  // TODO
   throw new Error("TODO");
 }
 
 /**
- * Growth experiments: parse "exp=onboarding-v2&cohort=A&cohort=B" into a Map
- * where keys map to arrays of values in insertion order.
+ * EXERCISE 6
+ * Utility type: apply a partial profile patch immutably.
+ * Use `Partial`.
  */
-export function parseExperimentQuery(query: string): Map<string, string[]> {
-  // TODO: split on &, then on =, accumulate values in arrays
-  throw new Error("TODO");
+export interface UserProfile {
+  id: string;
+  email: string;
+  displayName: string;
+  marketingOptIn: boolean;
 }
 
-
-/**
- * Feature flag cache:
- * - `set` stores a value with a TTL in milliseconds.
- * - `get` returns undefined if missing or expired.
- * - `size` counts only non-expired entries.
- */
-export class ExpiringFeatureCache<K, V> {
-  private readonly store = new Map<K, { value: V; expiresAt: number }>();
-
-  set(key: K, value: V, ttlMs: number): void {
-    // TODO: insert or replace with computed expiresAt
-    throw new Error("TODO");
-  }
-
-  get(key: K, now: number = Date.now()): V | undefined {
-    // TODO: return value if not expired; otherwise delete and return undefined
-    throw new Error("TODO");
-  }
-
-  size(now: number = Date.now()): number {
-    // TODO: count entries that are not expired
-    throw new Error("TODO");
-  }
-}
-
-/**
- * Job orchestration: summarize how many tasks are in each JobStatus.
- */
-export enum JobStatus {
-  Pending = "pending",
-  Running = "running",
-  Failed = "failed",
-  Completed = "completed",
-}
-
-export function summarizeStatuses(statuses: JobStatus[]): Map<JobStatus, number> {
-  // TODO: build a Map with counts for every status present in the input
+export function applyUserProfilePatch(
+  profile: UserProfile,
+  patch: Partial<Omit<UserProfile, "id">>
+): UserProfile {
   throw new Error("TODO");
 }
 
 /**
- * Reliability: retry an async call to a third-party API up to `attempts` times,
- * with `delayMs` between tries. Throw the last error if all attempts fail.
+ * EXERCISE 7
+ * Utility type: accept readonly deployment config and return a mutable copy.
+ * Use `Readonly`.
  */
-export async function retryApiCall<T>(
-  task: () => Promise<T>,
-  attempts: number,
-  delayMs: number
-): Promise<T> {
-  // TODO: loop attempts, await task, wait with setTimeout/Promise between failures
+export interface DeploymentConfig {
+  region: string;
+  autoScale: boolean;
+}
+
+export function cloneDeploymentConfigWithEURegion(
+  config: Readonly<DeploymentConfig>
+): DeploymentConfig {
   throw new Error("TODO");
 }
 
 /**
- * SaaS permissions: Map<Role, Set<permission>> matrix for admin UI.
- * Implement canAccess to check membership.
+ * EXERCISE 8
+ * Utility type: track feature flags with `Record`.
  */
-export enum Role {
-  Guest = "guest",
-  User = "user",
-  Admin = "admin",
-}
+export type FeatureKey = "search" | "checkout" | "analytics";
+export type FeatureFlags = Record<FeatureKey, boolean>;
 
-export class AccessControl {
-  constructor(private readonly grants: Map<Role, Set<string>>) {}
-
-  canAccess(role: Role, permission: string): boolean {
-    // TODO: return true if permission exists for role
-    throw new Error("TODO");
-  }
+export function enabledFeatures(flags: FeatureFlags): FeatureKey[] {
+  return [];
 }
 
 /**
- * Marketplace Order Book: manage order lifecycle and payouts.
- * - Internals: Map<orderId, OrderRecord>, Set<blockedVendorIds>.
- * - OrderStatus enum defines allowed states (pending -> paid -> packed -> shipped -> delivered).
- *   Cancellation is allowed from any non-delivered state.
- * - addOrder(orderId, vendorId, items):
- *     * items: Array<{ sku: string; qty: number; price: number }>
- *     * throw if orderId exists or vendor is blocked
- * - blockVendor(vendorId):
- *     * add to blocked set
- *     * cancel all non-delivered orders for that vendor
- * - advanceStatus(orderId, next):
- *     * enforce monotonic transitions using a Map<OrderStatus, Set<OrderStatus>> of allowed next states
- *     * record each state change in the order's history (Array<{ status; atMs }>)
- * - cancelOrder(orderId):
- *     * mark status "canceled" unless already delivered
- *     * record cancellation time
- * - calculatePayouts():
- *     * return Map<vendorId, amountDue>
- *     * include only delivered orders, compute sum of qty * price per item
- *     * apply a flat platform fee of 5% (0.05) to each order before adding to the vendor total
- * - getTimeline(orderId):
- *     * return a read-only copy of the history array (do not leak internal reference)
- * Focus on correct Map/Set usage, status validation, and immutability of returned data.
+ * ============================================================
+ * PROBLEM 1 (Design from scratch)
+ * Incident Routing Engine
+ * ============================================================
+ *
+ * Build a feature-oriented incident routing module using only:
+ * - functions
+ * - interfaces
+ * - type aliases
+ * - Map/Set
+ * - utility types when they help
+ *
+ * 1) Define a severity model for incidents.
+ *    Pick the data structure you think fits best for values like:
+ *    - low
+ *    - medium
+ *    - high
+ *    - critical
+ *
+ * 2) Create this custom types:
+ *    - Incident { id, title, service, severity, tags, createdAtMs }
+ *    - Engineer { id, name, skills, maxLoad: number }
+ *    - DraftIncident is Incident without id and createdAtMs
+ *
+ * 3) Create `AssignmentResult` which contains ok: true/false, incidentId: string, in case of ok true, engineerId: string or reason: string
+ *
+
+/**
+ * ============================================================
+ * PROBLEM 2 (Design from scratch)
+ * Async Task Tracker
+ * ============================================================
+ *
+ * Build a task tracking module using only common types and utility types.
+ *
+ * 1) Define the right type for task state.
+ *    - pending
+ *    - running
+ *    - done
+ *    - failed
+ *
+ * 2) Create custom types:
+ *    - Task { id, title, ownerId, state, tags, updatedAtMs }
+ *    - CreateTaskInput is a Task without `id` and `updatedAtMs`
+ *
+ * 3) Create utility-driven helper types:
+ *    - TaskPatch: allow updating only `title`, `ownerId`, and `state`
+ *    - TaskSummary: compact public view with only `id`, `title`, and `state`
+ *
+ * 4) Implement:
+ *    - createTask(task: CreateTaskInput, nextId: string): Task
+ *    - updateTask(task: Task, patch: TaskPatch): Task
+ *    - groupTasksByState(tasks): Map<state, Task[]>
+ *    - summarizeTasks(tasks): TaskSummary[]
+ *
+ * Rules:
+ * - `id` must not change after creation.
+ * - `updatedAtMs` should change when task is updated.
+ * - `groupTasksByState` should preserve insertion order inside each group.
+ * - `summarizeTasks` must not leak extra fields.
  */
-export enum OrderStatus {
-  Pending = "pending",
-  Paid = "paid",
-  Packed = "packed",
-  Shipped = "shipped",
-  Delivered = "delivered",
-  Canceled = "canceled",
-}
 
-type OrderItem = { sku: string; qty: number; price: number };
-type OrderRecord = {
-  vendorId: string;
-  status: OrderStatus;
-  items: Map<string, OrderItem>;
-  history: Array<{ status: OrderStatus; atMs: number }>;
-};
-
-export class MarketplaceOrderBook {
-  private readonly orders = new Map<string, OrderRecord>();
-  private readonly blockedVendors = new Set<string>();
-
-  addOrder(orderId: string, vendorId: string, items: OrderItem[]): void {
-    // TODO: implement contract above
-    throw new Error("TODO");
-  }
-
-  blockVendor(vendorId: string): void {
-    // TODO: block vendor and cancel their non-delivered orders
-    throw new Error("TODO");
-  }
-
-  advanceStatus(orderId: string, next: OrderStatus, atMs: number = Date.now()): void {
-    // TODO: enforce allowed transitions and record history
-    throw new Error("TODO");
-  }
-
-  cancelOrder(orderId: string, atMs: number = Date.now()): void {
-    // TODO: cancel if not delivered; record history
-    throw new Error("TODO");
-  }
-
-  calculatePayouts(): Map<string, number> {
-    // TODO: sum delivered orders per vendor after 5% platform fee
-    throw new Error("TODO");
-  }
-
-  getTimeline(orderId: string): ReadonlyArray<{ status: OrderStatus; atMs: number }> {
-    // TODO: return a defensive copy of history
-    throw new Error("TODO");
-  }
-}
+// TODO: add your state type, interfaces, utility types, and functions for Problem 2
