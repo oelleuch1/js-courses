@@ -2,6 +2,8 @@
 
 ## What You Will Learn
 
+x = { name: 1, 0: 5 }
+
 - How to use `Map`, `Set`, `interface`, and utility types in product code.
 - How to model API and feature states with union/intersection and literal types.
 - How to shape existing types with `Pick`, `Omit`, `Readonly`, `Partial`, and `Record`.
@@ -17,7 +19,9 @@
 
 ```ts
 const inventory = new Map<string, number>();
-inventory.set("sku-1", 10);
+inventory.set("sku-1", 10); // { 'sku-1': 10 },
+inventory.set("sku-1", 20); // { 'sku-1': 20 },
+inventory.set("sku-2", 20); // { 'sku-1': 20, 'sku-2': 20 },
 ```
 
 ---
@@ -30,6 +34,9 @@ inventory.set("sku-1", 10);
 ```ts
 const onlineUsers = new Set<string>();
 onlineUsers.add("u-10");
+onlineUsers.add("u-10");
+
+// onlineUsers => ['u-10'];
 ```
 
 ---
@@ -45,11 +52,18 @@ interface UserProfile {
   email: string;
   role: "admin" | "member";
 }
+
+const user1: UserProfile = { id: "123", email: "test@gmail.com", role: "admin" };
+X not valid; const user2: UserProfile = [1, 2];
 ```
 
 ---
 
 ## Special Types
+type ApiResult = { ok: boolean; data: ApiResultData };
+const apiResult1: ApiResult = { ok: false, data: "failed" };
+
+type ApiResultData = "success" | "failed"
 
 ### Union Types
 
@@ -64,9 +78,9 @@ type ApiResult = { ok: true; data: string } | { ok: false; error: string };
 Use when an object must satisfy multiple contracts.
 
 ```ts
-type Audited = { updatedAtMs: number };
+type Audited = { updatedAtMs: number, email: number };
 type User = { id: string; email: string };
-type AuditedUser = User & Audited;
+type AuditedUser = User & Audited; // { updatedAtMs: number, id: string; email: string | number }
 ```
 
 ### Literal Types
@@ -83,6 +97,7 @@ Use for ordered fixed-size values.
 
 ```ts
 type GeoPoint = [lat: number, lng: number];
+const geoPint2 = [1, 2];
 ```
 
 ---
@@ -94,14 +109,17 @@ type GeoPoint = [lat: number, lng: number];
 Use when you want a smaller view of an existing type.
 
 ```ts
-interface UserProfile {
+type Email = ///
+
+type UserProfile = {
   id: string;
-  email: string;
+  email: Email;
   role: "admin" | "member";
-  createdAtMs: number;
+  createdAtMs?: number;
 }
 
 type UserContact = Pick<UserProfile, "id" | "email">;
+// type UserContact = { id: string; email: string; };
 ```
 
 ### `Omit<T, K>`
@@ -118,6 +136,10 @@ Use when data should not be mutated after creation.
 
 ```ts
 type FrozenUser = Readonly<UserProfile>;
+
+const frozenUser: Readonly<UserProfile> = { id: 10, email: '' };
+frozenUser.id = 101;
+console.log(frozenUser.id)
 ```
 
 ### `Partial<T>`
@@ -126,6 +148,8 @@ Use for patch/update payloads where every field is optional.
 
 ```ts
 type UserPatch = Partial<UserProfile>;
+{ id?, role?, email?, createdAtMs? }
+// const updatedUser: UserPatch = { role: 'admin' }
 ```
 
 ### `Record<K, V>`
@@ -134,6 +158,7 @@ Use for dictionary-like objects with known key shape.
 
 ```ts
 type FeatureFlags = Record<"search" | "checkout", boolean>;
+const featureFlags: FeatureFlags = { search: true,  checkout: false };
 ```
 
 ### `unknown`
