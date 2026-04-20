@@ -24,9 +24,22 @@
  *     { eventId: "e1", userId: "u1", pageId: "home", atMs: 100 },
  *     { eventId: "e2", userId: "u2", pageId: "pricing", atMs: 200 }
  *   ],
- *   distinctUserIds: Set { "u1", "u2" }
+ *   distinctUserIds: Array { "u1", "u2" }
  * }
  */
+
+const s = new Set();
+
+s.add(1);
+s.add(1);
+
+// { 1 }
+// if it was array => [1, 1]
+
+// eventIds = new Set();
+// for of events => eventIds.add(event.eventId)
+// eventIds: {  }
+
 export interface PageViewEvent {
   eventId: string;
   userId: string;
@@ -46,13 +59,26 @@ export function normalizePageViews(events: PageViewEvent[]): {
     distinctUserIds.add(event.userId);
 
     if (!seenEventIds.has(event.eventId)) {
-      seenEventIds.add(event.eventId);
       uniqueEvents.push(event);
+      seenEventIds.add(event.eventId);
     }
   }
 
   return { uniqueEvents, distinctUserIds };
 }
+
+export function normalizePageViews2(events: PageViewEvent[]): {
+  uniqueEvents: PageViewEvent[];
+  distinctUserIds: Set<string>;
+} {
+  const distinctUserIds = new Set(events.map(event => event.userId));
+
+  const distinctEventIds = new Set(events.map(event => event.eventId)); // { 'e1', 'e2' };
+  const uniqueEvents = [...distinctEventIds].map(eventId => events.find(e => e.eventId === eventId)) as PageViewEvent[];
+
+  return { distinctUserIds, uniqueEvents };
+}
+
 
 const demoEvents: PageViewEvent[] = [
   { eventId: "e1", userId: "u1", pageId: "home", atMs: 100 },
@@ -60,9 +86,9 @@ const demoEvents: PageViewEvent[] = [
   { eventId: "e1", userId: "u1", pageId: "home", atMs: 100 },
 ];
 
-const demoNormalizedPageViews = normalizePageViews(demoEvents);
-console.log("normalizePageViews uniqueEvents:", demoNormalizedPageViews.uniqueEvents);
-console.log("normalizePageViews distinctUserIds:", [...demoNormalizedPageViews.distinctUserIds]);
+const demoNormalizedPageViews = normalizePageViews2(demoEvents);
+// console.log("normalizePageViews uniqueEvents:", demoNormalizedPageViews.uniqueEvents);
+// console.log("normalizePageViews distinctUserIds:", [...demoNormalizedPageViews.distinctUserIds]);
 
 /**
  * EXERCISE 2
@@ -72,6 +98,7 @@ console.log("normalizePageViews distinctUserIds:", [...demoNormalizedPageViews.d
  * Return one Map with summed totals per invoice.
  *
  * Example:
+ * // ['inv-1', 'inv-2', 'inv-3']
  * const shards = [
  *   new Map([
  *     ["inv-1", 100],
@@ -80,7 +107,11 @@ console.log("normalizePageViews distinctUserIds:", [...demoNormalizedPageViews.d
  *   new Map([
  *     ["inv-2", 20],
  *     ["inv-3", 10]
- *   ])
+ *   ]),*
+ *  new Map([
+ *     ["inv-1", 20],
+ *     ["inv-3", 60]
+ *   ]),
  * ];
  *
  * mergeInvoiceTotals(shards) should return:
@@ -105,6 +136,32 @@ export function mergeInvoiceTotals(
   return mergedTotals;
 }
 
+export function mergeInvoiceTotals2(
+  shards: Array<Map<string, number>>
+): Map<string, number> {
+
+  const invoiceKeys = new Set<string>(); // { 'inv-1', 'inv-2', 'inv-3' }
+  const invoiceMap = new Map()
+  
+  shards.forEach((shard: Map<string, number>) => {
+    [...shard.keys()].forEach(invKey => invoiceKeys.add(invKey))
+  })
+
+  for (const invK of invoiceKeys) {
+    let totalForInvoice = 0;
+
+    shards.forEach((shard: Map<string, number>) => {
+      if (shard.has(invK)) {
+        totalForInvoice += shard.get(invK)!;
+      }
+    })
+
+    invoiceMap.set(invK, totalForInvoice)
+  }
+
+  return invoiceMap;
+}
+
 const demoShards: Array<Map<string, number>> = [
   new Map([
     ["inv-1", 100],
@@ -116,7 +173,7 @@ const demoShards: Array<Map<string, number>> = [
   ]),
 ];
 
-const demoMergedInvoiceTotals = mergeInvoiceTotals(demoShards);
+const demoMergedInvoiceTotals = mergeInvoiceTotals2(demoShards);
 console.log("mergeInvoiceTotals:", [...demoMergedInvoiceTotals.entries()]);
 
 /**
