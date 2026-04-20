@@ -38,9 +38,31 @@ export function normalizePageViews(events: PageViewEvent[]): {
   uniqueEvents: PageViewEvent[];
   distinctUserIds: Set<string>;
 } {
-  // TODO
-  throw new Error("TODO");
+  const uniqueEvents: PageViewEvent[] = [];
+  const distinctUserIds = new Set<string>();
+  const seenEventIds = new Set<string>();
+
+  for (const event of events) {
+    distinctUserIds.add(event.userId);
+
+    if (!seenEventIds.has(event.eventId)) {
+      seenEventIds.add(event.eventId);
+      uniqueEvents.push(event);
+    }
+  }
+
+  return { uniqueEvents, distinctUserIds };
 }
+
+const demoEvents: PageViewEvent[] = [
+  { eventId: "e1", userId: "u1", pageId: "home", atMs: 100 },
+  { eventId: "e2", userId: "u2", pageId: "pricing", atMs: 200 },
+  { eventId: "e1", userId: "u1", pageId: "home", atMs: 100 },
+];
+
+const demoNormalizedPageViews = normalizePageViews(demoEvents);
+console.log("normalizePageViews uniqueEvents:", demoNormalizedPageViews.uniqueEvents);
+console.log("normalizePageViews distinctUserIds:", [...demoNormalizedPageViews.distinctUserIds]);
 
 /**
  * EXERCISE 2
@@ -71,9 +93,31 @@ export function normalizePageViews(events: PageViewEvent[]): {
 export function mergeInvoiceTotals(
   shards: Array<Map<string, number>>
 ): Map<string, number> {
-  // TODO
-  throw new Error("TODO");
+  const mergedTotals = new Map<string, number>();
+
+  for (const shard of shards) {
+    for (const [invoiceId, total] of shard) {
+      const previousTotal = mergedTotals.get(invoiceId) ?? 0;
+      mergedTotals.set(invoiceId, previousTotal + total);
+    }
+  }
+
+  return mergedTotals;
 }
+
+const demoShards: Array<Map<string, number>> = [
+  new Map([
+    ["inv-1", 100],
+    ["inv-2", 50],
+  ]),
+  new Map([
+    ["inv-2", 20],
+    ["inv-3", 10],
+  ]),
+];
+
+const demoMergedInvoiceTotals = mergeInvoiceTotals(demoShards);
+console.log("mergeInvoiceTotals:", [...demoMergedInvoiceTotals.entries()]);
 
 /**
  * EXERCISE 3
@@ -104,9 +148,38 @@ export interface PermissionAuditRow {
 export function buildGrantedPermissionIndex(
   rows: PermissionAuditRow[]
 ): Map<string, Set<string>> {
-  // TODO
-  throw new Error("TODO");
+  const permissionIndex = new Map<string, Set<string>>();
+
+  for (const row of rows) {
+    if (!row.granted) {
+      continue;
+    }
+
+    if (!permissionIndex.has(row.userId)) {
+      permissionIndex.set(row.userId, new Set<string>());
+    }
+
+    permissionIndex.get(row.userId)!.add(row.permission);
+  }
+
+  return permissionIndex;
 }
+
+const demoPermissionRows: PermissionAuditRow[] = [
+  { userId: "u1", permission: "reports.read", granted: true },
+  { userId: "u1", permission: "reports.write", granted: false },
+  { userId: "u2", permission: "billing.read", granted: true },
+  { userId: "u1", permission: "reports.read", granted: true },
+];
+
+const demoPermissionIndex = buildGrantedPermissionIndex(demoPermissionRows);
+console.log(
+  "buildGrantedPermissionIndex:",
+  [...demoPermissionIndex.entries()].map(([userId, permissions]) => [
+    userId,
+    [...permissions],
+  ])
+);
 
 /**
  * EXERCISE 4
@@ -146,9 +219,26 @@ export interface CustomerRecord {
 export function toCustomerListItem(
   customer: CustomerRecord
 ): Pick<CustomerRecord, "id" | "name" | "email" | "plan"> {
-  // TODO
-  throw new Error("TODO");
+  return {
+    id: customer.id,
+    name: customer.name,
+    email: customer.email,
+    plan: customer.plan,
+  };
 }
+
+const demoCustomerRecord: CustomerRecord = {
+  id: "c1",
+  name: "Ada",
+  email: "ada@company.com",
+  plan: "pro",
+  createdAtMs: 1000,
+  lastLoginAtMs: 2000,
+  internalNotes: "priority account",
+};
+
+const demoCustomerListItem = toCustomerListItem(demoCustomerRecord);
+console.log("toCustomerListItem:", demoCustomerListItem);
 
 /**
  * EXERCISE 5
@@ -177,9 +267,15 @@ export function toCustomerListItem(
 export function toCreateCustomerPayload(
   customer: CustomerRecord
 ): Omit<CustomerRecord, "id" | "createdAtMs" | "lastLoginAtMs" | "internalNotes"> {
-  // TODO
-  throw new Error("TODO");
+  return {
+    name: customer.name,
+    email: customer.email,
+    plan: customer.plan,
+  };
 }
+
+const demoCreateCustomerPayload = toCreateCustomerPayload(demoCustomerRecord);
+console.log("toCreateCustomerPayload:", demoCreateCustomerPayload);
 
 /**
  * EXERCISE 6
@@ -222,9 +318,45 @@ export function applyUserProfilePatch(
   current: UserProfile,
   patch: Partial<Omit<UserProfile, "id">>
 ): UserProfile {
-  // TODO
-  throw new Error("TODO");
+  const updatedProfile: UserProfile = {
+    id: current.id,
+    email: current.email,
+    displayName: current.displayName,
+    timezone: current.timezone,
+    marketingOptIn: current.marketingOptIn,
+  };
+
+  if (patch.email !== undefined) {
+    updatedProfile.email = patch.email;
+  }
+  if (patch.displayName !== undefined) {
+    updatedProfile.displayName = patch.displayName;
+  }
+  if (patch.timezone !== undefined) {
+    updatedProfile.timezone = patch.timezone;
+  }
+  if (patch.marketingOptIn !== undefined) {
+    updatedProfile.marketingOptIn = patch.marketingOptIn;
+  }
+
+  return updatedProfile;
 }
+
+const demoCurrentProfile: UserProfile = {
+  id: "u1",
+  email: "old@company.com",
+  displayName: "Old Name",
+  timezone: "UTC",
+  marketingOptIn: false,
+};
+
+const demoProfilePatch = {
+  displayName: "New Name",
+  marketingOptIn: true,
+};
+
+const demoPatchedProfile = applyUserProfilePatch(demoCurrentProfile, demoProfilePatch);
+console.log("applyUserProfilePatch:", demoPatchedProfile);
 
 /**
  * EXERCISE 7
@@ -246,9 +378,33 @@ export type FeatureKey = "search" | "checkout" | "analytics" | "bulk-export";
 export type FeatureFlags = Record<FeatureKey, boolean>;
 
 export function enabledFeatures(flags: FeatureFlags): FeatureKey[] {
-  // TODO
-  throw new Error("TODO");
+  const orderedFeatureKeys: FeatureKey[] = [
+    "search",
+    "checkout",
+    "analytics",
+    "bulk-export",
+  ];
+
+  const result: FeatureKey[] = [];
+
+  for (const key of orderedFeatureKeys) {
+    if (flags[key] === true) {
+      result.push(key);
+    }
+  }
+
+  return result;
 }
+
+const demoFeatureFlags: FeatureFlags = {
+  search: true,
+  checkout: false,
+  analytics: true,
+  "bulk-export": false,
+};
+
+const demoEnabledFeatures = enabledFeatures(demoFeatureFlags);
+console.log("enabledFeatures:", demoEnabledFeatures);
 
 /**
  * ============================================================
