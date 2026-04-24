@@ -536,7 +536,6 @@ console.log("enabledFeatures:", demoEnabledFeatures);
  */
 
 // TODO: add your types and functions for Problem 1
-
 /**
  * ============================================================
  * PROBLEM 2 (Design from scratch, no classes)
