@@ -71,14 +71,15 @@ export function normalizePageViews2(events: PageViewEvent[]): {
   uniqueEvents: PageViewEvent[];
   distinctUserIds: Set<string>;
 } {
-  const distinctUserIds = new Set(events.map(event => event.userId));
+  const distinctUserIds = new Set(events.map((event) => event.userId));
 
-  const distinctEventIds = new Set(events.map(event => event.eventId)); // { 'e1', 'e2' };
-  const uniqueEvents = [...distinctEventIds].map(eventId => events.find(e => e.eventId === eventId)) as PageViewEvent[];
+  const distinctEventIds = new Set(events.map((event) => event.eventId)); // { 'e1', 'e2' };
+  const uniqueEvents = [...distinctEventIds].map((eventId) =>
+    events.find((e) => e.eventId === eventId),
+  ) as PageViewEvent[];
 
   return { distinctUserIds, uniqueEvents };
 }
-
 
 const demoEvents: PageViewEvent[] = [
   { eventId: "e1", userId: "u1", pageId: "home", atMs: 100 },
@@ -122,7 +123,7 @@ const demoNormalizedPageViews = normalizePageViews2(demoEvents);
  * }
  */
 export function mergeInvoiceTotals(
-  shards: Array<Map<string, number>>
+  shards: Array<Map<string, number>>,
 ): Map<string, number> {
   const mergedTotals = new Map<string, number>();
 
@@ -137,15 +138,14 @@ export function mergeInvoiceTotals(
 }
 
 export function mergeInvoiceTotals2(
-  shards: Array<Map<string, number>>
+  shards: Array<Map<string, number>>,
 ): Map<string, number> {
-
   const invoiceKeys = new Set<string>(); // { 'inv-1', 'inv-2', 'inv-3' }
-  const invoiceMap = new Map()
-  
+  const invoiceMap = new Map();
+
   shards.forEach((shard: Map<string, number>) => {
-    [...shard.keys()].forEach(invKey => invoiceKeys.add(invKey))
-  })
+    [...shard.keys()].forEach((invKey) => invoiceKeys.add(invKey));
+  });
 
   for (const invK of invoiceKeys) {
     let totalForInvoice = 0;
@@ -154,9 +154,9 @@ export function mergeInvoiceTotals2(
       if (shard.has(invK)) {
         totalForInvoice += shard.get(invK)!;
       }
-    })
+    });
 
-    invoiceMap.set(invK, totalForInvoice)
+    invoiceMap.set(invK, totalForInvoice);
   }
 
   return invoiceMap;
@@ -187,7 +187,7 @@ console.log("mergeInvoiceTotals:", [...demoMergedInvoiceTotals.entries()]);
  *   { userId: "u1", permission: "reports.read", granted: true },
  *   { userId: "u1", permission: "reports.write", granted: false },
  *   { userId: "u2", permission: "billing.read", granted: true },
- *   { userId: "u1", permission: "reports.read", granted: true }
+ *   { userId: "u1", permission: "billing.read", granted: true }
  * ];
  *
  * buildGrantedPermissionIndex(rows) should return:
@@ -203,39 +203,45 @@ export interface PermissionAuditRow {
 }
 
 export function buildGrantedPermissionIndex(
-  rows: PermissionAuditRow[]
+  rows: PermissionAuditRow[],
 ): Map<string, Set<string>> {
-  const permissionIndex = new Map<string, Set<string>>();
+  // define a variable to store the granted true rows
+  // loop over the rows and choose only the granted rows, put then into a map of sets?
+  // return the map of sets
 
-  for (const row of rows) {
+  //Create an empty map
+  // if row is granted false then skip
+  // if no userId then create
+  // add the permission
+
+  const permissionMap = new Map<string, Set<string>>();
+
+  rows.forEach((row: PermissionAuditRow) => {
     if (!row.granted) {
-      continue;
+      return;
+    } else {
+      if (permissionMap.has(row.userId)) {
+        const grantedPermissions = permissionMap.get(row.userId);
+        grantedPermissions?.add(row.permission);
+        permissionMap.set(row.userId, grantedPermissions);
+      } else {
+        permissionMap.set(row.userId, new Set([row.permission]));
+      }
     }
-
-    if (!permissionIndex.has(row.userId)) {
-      permissionIndex.set(row.userId, new Set<string>());
-    }
-
-    permissionIndex.get(row.userId)!.add(row.permission);
-  }
-
-  return permissionIndex;
+  });
+  return permissionMap;
 }
 
 const demoPermissionRows: PermissionAuditRow[] = [
   { userId: "u1", permission: "reports.read", granted: true },
   { userId: "u1", permission: "reports.write", granted: false },
   { userId: "u2", permission: "billing.read", granted: true },
-  { userId: "u1", permission: "reports.read", granted: true },
+  { userId: "u1", permission: "billing.read", granted: true },
 ];
 
-const demoPermissionIndex = buildGrantedPermissionIndex(demoPermissionRows);
 console.log(
   "buildGrantedPermissionIndex:",
-  [...demoPermissionIndex.entries()].map(([userId, permissions]) => [
-    userId,
-    [...permissions],
-  ])
+  buildGrantedPermissionIndex(demoPermissionRows),
 );
 
 /**
@@ -245,15 +251,6 @@ console.log(
  * Use `Pick`.
  *
  * Example:
- * const customer = {
- *   id: "c1",
- *   name: "Ada",
- *   email: "ada@company.com",
- *   plan: "pro",
- *   createdAtMs: 1000,
- *   lastLoginAtMs: 2000,
- *   internalNotes: "priority account"
- * };
  *
  * toCustomerListItem(customer) should return:
  * {
@@ -263,6 +260,15 @@ console.log(
  *   plan: "pro"
  * }
  */
+const customer = {
+  id: "c1",
+  name: "Ada",
+  email: "ada@company.com",
+  plan: "pro",
+  createdAtMs: 1000,
+  lastLoginAtMs: 2000,
+  internalNotes: "priority account",
+};
 export interface CustomerRecord {
   id: string;
   name: string;
@@ -274,7 +280,7 @@ export interface CustomerRecord {
 }
 
 export function toCustomerListItem(
-  customer: CustomerRecord
+  customer: CustomerRecord,
 ): Pick<CustomerRecord, "id" | "name" | "email" | "plan"> {
   return {
     id: customer.id,
@@ -284,18 +290,10 @@ export function toCustomerListItem(
   };
 }
 
-const demoCustomerRecord: CustomerRecord = {
-  id: "c1",
-  name: "Ada",
-  email: "ada@company.com",
-  plan: "pro",
-  createdAtMs: 1000,
-  lastLoginAtMs: 2000,
-  internalNotes: "priority account",
-};
-
-const demoCustomerListItem = toCustomerListItem(demoCustomerRecord);
-console.log("toCustomerListItem:", demoCustomerListItem);
+console.log(
+  "toCustomerListItem:",
+  toCustomerListItem(customer as CustomerRecord),
+);
 
 /**
  * EXERCISE 5
@@ -322,17 +320,19 @@ console.log("toCustomerListItem:", demoCustomerListItem);
  * }
  */
 export function toCreateCustomerPayload(
-  customer: CustomerRecord
-): Omit<CustomerRecord, "id" | "createdAtMs" | "lastLoginAtMs" | "internalNotes"> {
-  return {
-    name: customer.name,
-    email: customer.email,
-    plan: customer.plan,
-  };
+  customer: CustomerRecord,
+): Omit<
+  CustomerRecord,
+  "id" | "createdAtMs" | "lastLoginAtMs" | "internalNotes"
+> {
+  return { name: customer.name, email: customer.email, plan: customer.plan };
 }
 
-const demoCreateCustomerPayload = toCreateCustomerPayload(demoCustomerRecord);
-console.log("toCreateCustomerPayload:", demoCreateCustomerPayload);
+// const demoCreateCustomerPayload = toCreateCustomerPayload(demoCustomerRecord);
+console.log(
+  "toCreateCustomerPayload:",
+  toCreateCustomerPayload(customer as CustomerRecord),
+);
 
 /**
  * EXERCISE 6
@@ -363,6 +363,18 @@ console.log("toCreateCustomerPayload:", demoCreateCustomerPayload);
  *   marketingOptIn: true
  * }
  */
+const current = {
+  id: "u1",
+  email: "old@company.com",
+  displayName: "Old Name",
+  timezone: "UTC",
+  marketingOptIn: false,
+};
+
+const patch = {
+  displayName: "New Name",
+  marketingOptIn: true,
+};
 export interface UserProfile {
   id: string;
   email: string;
@@ -373,47 +385,12 @@ export interface UserProfile {
 
 export function applyUserProfilePatch(
   current: UserProfile,
-  patch: Partial<Omit<UserProfile, "id">>
+  patch: Partial<Omit<UserProfile, "id">>,
 ): UserProfile {
-  const updatedProfile: UserProfile = {
-    id: current.id,
-    email: current.email,
-    displayName: current.displayName,
-    timezone: current.timezone,
-    marketingOptIn: current.marketingOptIn,
-  };
-
-  if (patch.email !== undefined) {
-    updatedProfile.email = patch.email;
-  }
-  if (patch.displayName !== undefined) {
-    updatedProfile.displayName = patch.displayName;
-  }
-  if (patch.timezone !== undefined) {
-    updatedProfile.timezone = patch.timezone;
-  }
-  if (patch.marketingOptIn !== undefined) {
-    updatedProfile.marketingOptIn = patch.marketingOptIn;
-  }
-
-  return updatedProfile;
+  return { ...current, ...patch };
 }
 
-const demoCurrentProfile: UserProfile = {
-  id: "u1",
-  email: "old@company.com",
-  displayName: "Old Name",
-  timezone: "UTC",
-  marketingOptIn: false,
-};
-
-const demoProfilePatch = {
-  displayName: "New Name",
-  marketingOptIn: true,
-};
-
-const demoPatchedProfile = applyUserProfilePatch(demoCurrentProfile, demoProfilePatch);
-console.log("applyUserProfilePatch:", demoPatchedProfile);
+console.log("applyUserProfilePatch:", applyUserProfilePatch(current, patch));
 
 /**
  * EXERCISE 7
@@ -431,37 +408,23 @@ console.log("applyUserProfilePatch:", demoPatchedProfile);
  * enabledFeatures(flags) should return:
  * ["search", "analytics"]
  */
-export type FeatureKey = "search" | "checkout" | "analytics" | "bulk-export";
-export type FeatureFlags = Record<FeatureKey, boolean>;
 
-export function enabledFeatures(flags: FeatureFlags): FeatureKey[] {
-  const orderedFeatureKeys: FeatureKey[] = [
-    "search",
-    "checkout",
-    "analytics",
-    "bulk-export",
-  ];
-
-  const result: FeatureKey[] = [];
-
-  for (const key of orderedFeatureKeys) {
-    if (flags[key] === true) {
-      result.push(key);
-    }
-  }
-
-  return result;
-}
-
-const demoFeatureFlags: FeatureFlags = {
+const flags: FeatureFlags = {
   search: true,
   checkout: false,
   analytics: true,
   "bulk-export": false,
+  // payment: false,
 };
+export type FeatureKey = "search" | "checkout" | "analytics" | "bulk-export";
+export type FeatureFlags = Record<FeatureKey, boolean>;
 
-const demoEnabledFeatures = enabledFeatures(demoFeatureFlags);
-console.log("enabledFeatures:", demoEnabledFeatures);
+export function enabledFeatures(flags: FeatureFlags): FeatureKey[] {
+  const keys = Object.keys(flags);
+  return keys.filter((key) => flags[key]);
+}
+
+console.log("enabledFeatures:", enabledFeatures(flags));
 
 /**
  * ============================================================
@@ -512,7 +475,7 @@ console.log("enabledFeatures:", demoEnabledFeatures);
  * 3) Implement:
  *    - createOrder(input: DraftMarketplaceOrder, nextId: string, nowMs?: number): MarketplaceOrder
  *      Rule: new orders start in pending state
- *    - indexOrdersBySeller(orders): Map<sellerId, MarketplaceOrder[]>
+ *    - indexOrdersBySeller(orders): Map<sellerId, MarketplaceOrder[], >
  *    - groupOrdersByState(orders): Map<state, MarketplaceOrder[]>
  *    - collectPriorityTags(orders): Set<string>
  *      Rule: return tags from orders in pending or paid state
@@ -536,11 +499,201 @@ console.log("enabledFeatures:", demoEnabledFeatures);
  */
 
 // TODO: add your types and functions for Problem 1
+
+type OrderState = "pending" | "paid" | "packed" | "shipped";
+//enums
+
+interface MarketplaceOrder {
+  id: string;
+  customerId: string;
+  sellerId: string;
+  itemIds: string[];
+  totalAmount: number;
+  state: OrderState;
+  tags: Set<string>;
+  createdAtMs: number;
+}
+
+type DraftMarketplaceOrder = Omit<
+  MarketplaceOrder,
+  "id" | "state" | "createdAtMs"
+>;
+
+interface SellerProfile {
+  id: string;
+  displayName: string;
+  supportedTags: Set<string>;
+  maxOpenOrders: number;
+}
+
+interface success {
+  orderId: string;
+  nextState: OrderState;
+  case: "success";
+}
+
+interface failure {
+  orderId: string;
+  reason: string;
+  case: "failure";
+}
+
+type FulfillmentDecision = success | failure;
+
+const createOrder = (
+  input: DraftMarketplaceOrder,
+  nextId: string,
+  nowMs?: number,
+): MarketplaceOrder => {
+  // create order
+  // start with pending state
+  const newOrder: MarketplaceOrder = {
+    ...input,
+    id: nextId,
+    createdAtMs: nowMs ?? 0,
+    state: "pending",
+  };
+  //input add  nextId, state === pending, createdAtMs: nowMs
+  return newOrder;
+};
+
+const orders: MarketplaceOrder[] = [
+  {
+    id: "1",
+    customerId: "C1",
+    sellerId: "S1",
+    itemIds: [],
+    totalAmount: 10,
+    state: "pending",
+    tags: new Set(),
+    createdAtMs: 10000,
+  },
+  {
+    id: "2",
+    customerId: "C1",
+    sellerId: "S2",
+    itemIds: [],
+    totalAmount: 10,
+    state: "packed",
+    tags: new Set(),
+    createdAtMs: 10000,
+  },
+  {
+    id: "3",
+    customerId: "C2",
+    sellerId: "S1",
+    itemIds: [],
+    totalAmount: 10,
+    state: "packed",
+    tags: new Set(),
+    createdAtMs: 10000,
+  },
+];
+
+const indexOrdersBySeller = (
+  orders: MarketplaceOrder[],
+): Map<MarketplaceOrder["sellerId"], MarketplaceOrder[]> => {
+  // store seller ID in set
+  // traverse throught the array of MO and check for ids of 1 selelr and add those to seller []
+
+  const sellerSet = new Set(orders.map((order) => order.sellerId));
+
+  const result: Map<MarketplaceOrder["sellerId"], MarketplaceOrder[]> =
+    new Map();
+
+  for (let seller of sellerSet) {
+    result.set(
+      seller,
+      orders.filter((order) => order.sellerId === seller),
+    );
+  }
+  return result;
+};
+
+console.log("indexOrder", indexOrdersBySeller(orders));
+
+const groupOrdersByState = (
+  orders: MarketplaceOrder[],
+): Map<OrderState, MarketplaceOrder[]> => {
+  // store state in set
+  // traverse throught the array of MO and check for state and add those to state []
+
+  const stateSet = new Set(orders.map((order) => order.state));
+  const group = new Map<OrderState, MarketplaceOrder[]>();
+
+  for (let state of stateSet) {
+    group.set(
+      state,
+      orders.filter((order) => order.state === state),
+    );
+  }
+
+  return group;
+};
+
+console.log("groupOrdersByState", groupOrdersByState(orders));
+
+const collectPriorityTags = (orders: MarketplaceOrder[]): Set<string> => {
+  // store tags in set
+  // traverse throught the array of MO and check for tags and add those to set
+
+  const tagSet = new Set<string>();
+
+  for (let order of orders) {
+    if (order.state === "pending" || order.state === "paid") {
+      for (let tag of order.tags) {
+        tagSet.add(tag);
+      }
+    }
+  }
+
+  return tagSet;
+};
+
+console.log("collectPriorityTags", collectPriorityTags(orders));
+//  { S1: 2, S2, 10 }
+
+const decideFulfillment = (
+  order: MarketplaceOrder,
+  sellerById: Map<string, SellerProfile>,
+  openOrderCountBySellerId: Map<string, number>,
+): FulfillmentDecision => {
+  // check if seller exists
+  // check if order is paid
+  // check if seller can fulfill more orders
+  // return success or failure
+
+  if (!sellerById.has(order.sellerId)) {
+    return { case: "failure", orderId: order.id, reason: "Seller not found" };
+  }
+  if (order.state !== "paid") {
+    return { case: "failure", orderId: order.id, reason: "Order is not paid" };
+  }
+  if (
+    openOrderCountBySellerId.get(order.sellerId) >=
+    sellerById.get(order.sellerId)?.maxOpenOrders
+  ) {
+    return {
+      case: "failure",
+      orderId: order.id,
+      reason: "Seller has max open orders",
+    };
+  }
+  return { case: "success", orderId: order.id, nextState: "packed" };
+};
+
+console.log(
+  "decideFulfillment",
+  decideFulfillment(orders[0], new Map(), new Map()),
+);
+
 /**
  * ============================================================
  * PROBLEM 2 (Design from scratch, no classes)
  * Async Task Tracker and Delivery Dashboard
  * ============================================================
+ *
+ * with enum
  *
  * Build a task-tracking module using:
  * - functions
@@ -553,7 +706,7 @@ console.log("enabledFeatures:", demoEnabledFeatures);
  *
  * Choose the right state representation yourself. Do not default to `enum`.
  *
- * 1) Define the right type for task state.
+ * 1) Define the right type for task state. // enum is required
  *    Values include:
  *    - pending
  *    - running
@@ -593,3 +746,348 @@ console.log("enabledFeatures:", demoEnabledFeatures);
  */
 
 // TODO: add your types and functions for Problem 2
+
+enum TaskState {
+  Pending = "pending",
+  Running = "running",
+  Done = "done",
+  Failed = "failed",
+}
+
+interface Task {
+  id: string;
+  title: string;
+  ownerId: string;
+  state: TaskState;
+  tags: Set<string>;
+  updatedAtMs: number;
+}
+
+type CreateTaskInput = Omit<Task, "id" | "updatedAtMs">;
+
+type TaskPatch = Partial<Omit<Task, "id">>;
+
+type TaskSummary = Pick<Task, "id" | "title" | "state">;
+
+interface TaskSuccess {
+  case: "success";
+  task: Task;
+}
+
+interface TaskFailure {
+  case: "failure";
+  reason: string;
+}
+
+type TaskResult = TaskSuccess | TaskFailure;
+
+const createTask = (
+  input: CreateTaskInput,
+  nextId: string,
+  nowMs?: number,
+): Task => {
+  // create a variable to store the new task
+  // combine input, id, ms into one and return as task
+
+  const task: Task = {
+    ...input,
+    id: nextId,
+    updatedAtMs: nowMs ?? 0,
+  };
+
+  return task;
+};
+console.log(
+  "createTask",
+  createTask(
+    {
+      title: "Task 1",
+      ownerId: "user1",
+      state: TaskState.Pending,
+      tags: new Set(),
+    },
+    "1",
+    1000,
+  ),
+);
+
+const updateTask = (task: Task, patch: TaskPatch, nowMs?: number): Task => {
+  const updatedTask: Task = {
+    ...task,
+    ...patch,
+    updatedAtMs: nowMs ?? 0,
+  };
+
+  return updatedTask;
+};
+
+console.log(
+  "updateTask",
+  updateTask(
+    {
+      id: "1",
+      title: "Task 1",
+      ownerId: "user1",
+      state: TaskState.Pending,
+      tags: new Set(),
+      updatedAtMs: 1000,
+    },
+    {
+      title: "Task 1 updated",
+      state: TaskState.Running,
+    },
+    2000,
+  ),
+);
+
+const summarizeTasks = (tasks: Task[]): TaskSummary[] => {
+  const summary: TaskSummary[] = [];
+  for (let task of tasks) {
+    summary.push({
+      id: task.id,
+      title: task.title,
+      state: task.state,
+    });
+  }
+
+  return summary;
+};
+console.log(
+  "summarizeTasks",
+  summarizeTasks([
+    {
+      id: "t1",
+      title: "Write docs",
+      ownerId: "u1",
+      state: TaskState.Pending,
+      tags: new Set(["docs"]),
+      updatedAtMs: 1000,
+    },
+    {
+      id: "t2",
+      title: "Fix bug",
+      ownerId: "u2",
+      state: TaskState.Running,
+      tags: new Set(["bug"]),
+      updatedAtMs: 1100,
+    },
+  ]),
+);
+
+const groupTasksByState = (tasks: Task[]): Map<TaskState, Task[]> => {
+  const stateGroup = new Map<TaskState, Task[]>();
+  const stateSet = new Set<TaskState>(tasks.map((task: Task) => task.state));
+
+  for (let state of stateSet) {
+    const sameStateTasks = tasks.filter((task: Task) => task.state === state);
+    stateGroup.set(state, sameStateTasks);
+  }
+  return stateGroup;
+};
+
+console.log(
+  "groupTasksByState",
+  groupTasksByState([
+    {
+      id: "t1",
+      title: "Write docs",
+      ownerId: "u1",
+      state: TaskState.Pending,
+      tags: new Set(["docs"]),
+      updatedAtMs: 1000,
+    },
+    {
+      id: "t2",
+      title: "Fix bug",
+      ownerId: "u2",
+      state: TaskState.Running,
+      tags: new Set(["bug"]),
+      updatedAtMs: 1100,
+    },
+    {
+      id: "t3",
+      title: "Write code",
+      ownerId: "u3",
+      state: TaskState.Done,
+      tags: new Set(["code"]),
+      updatedAtMs: 1200,
+    },
+  ]),
+);
+
+const buildOwnerTaskIndex = (tasks: Task[]): Map<string, Task[]> => {
+  const ownerTaskIndex = new Map<string, Task[]>();
+  const ownerSet = new Set(tasks.map((task) => task.ownerId));
+
+  for (let owner of ownerSet) {
+    ownerTaskIndex.set(
+      owner,
+      tasks.filter((task) => task.ownerId === owner),
+    );
+  }
+  return ownerTaskIndex;
+};
+
+console.log(
+  "buildOwnerTaskIndex",
+  buildOwnerTaskIndex([
+    {
+      id: "t1",
+      title: "Write docs",
+      ownerId: "u1",
+      state: TaskState.Pending,
+      tags: new Set(["docs"]),
+      updatedAtMs: 1000,
+    },
+    {
+      id: "t2",
+      title: "Fix bug",
+      ownerId: "u2",
+      state: TaskState.Running,
+      tags: new Set(["bug"]),
+      updatedAtMs: 1100,
+    },
+    {
+      id: "t3",
+      title: "Fix another bug",
+      ownerId: "u2",
+      state: TaskState.Running,
+      tags: new Set(["bug"]),
+      updatedAtMs: 1100,
+    },
+  ]),
+);
+
+const collectHotTags = (tasks: Task[]): Set<string> => {
+  const hotTags = new Set<string>();
+  const filteredTasks = tasks.filter(
+    (task) =>
+      task.state === TaskState.Running || task.state === TaskState.Failed,
+  );
+
+  for (let tag of filteredTasks) {
+    for (let singleTag of tag.tags) {
+      hotTags.add(singleTag);
+    }
+  }
+
+  return hotTags;
+};
+
+console.log(
+  "collectHotTags",
+  collectHotTags([
+    {
+      id: "t1",
+      title: "Write docs",
+      ownerId: "u1",
+      state: TaskState.Pending,
+      tags: new Set(["docs"]),
+      updatedAtMs: 1000,
+    },
+    {
+      id: "t2",
+      title: "Fix bug",
+      ownerId: "u2",
+      state: TaskState.Running,
+      tags: new Set(["bug"]),
+      updatedAtMs: 1100,
+    },
+    {
+      id: "t3",
+      title: "Write code",
+      ownerId: "u3",
+      state: TaskState.Running,
+      tags: new Set(["code"]),
+      updatedAtMs: 1200,
+    },
+  ]),
+);
+
+const transitionTask = (
+  task: Task,
+  nextState: TaskState,
+  nowMs?: number,
+): TaskResult => {
+  if (task.state === TaskState.Pending) {
+    if (nextState === TaskState.Running) {
+      return {
+        case: "success",
+        task: {
+          ...task,
+          state: TaskState.Running,
+          updatedAtMs: nowMs ?? task.updatedAtMs,
+        },
+      };
+    } else if (nextState === TaskState.Failed) {
+      return {
+        case: "success",
+        task: {
+          ...task,
+          state: TaskState.Failed,
+          updatedAtMs: nowMs ?? task.updatedAtMs,
+        },
+      };
+    }
+  }
+
+  if (task.state === TaskState.Running) {
+    if (nextState === TaskState.Done) {
+      return {
+        case: "success",
+        task: {
+          ...task,
+          state: TaskState.Done,
+          updatedAtMs: nowMs ?? task.updatedAtMs,
+        },
+      };
+    } else if (nextState === TaskState.Failed) {
+      return {
+        case: "success",
+        task: {
+          ...task,
+          state: TaskState.Failed,
+          updatedAtMs: nowMs ?? task.updatedAtMs,
+        },
+      };
+    }
+  }
+
+  if (task.state === TaskState.Failed) {
+    if (nextState === TaskState.Pending) {
+      return {
+        case: "success",
+        task: {
+          ...task,
+          state: TaskState.Pending,
+          updatedAtMs: nowMs ?? task.updatedAtMs,
+        },
+      };
+    }
+  }
+
+  if (task.state === TaskState.Done) {
+    return {
+      case: "failure",
+      reason: "Done tasks cannot transition",
+    };
+  }
+
+  return { case: "failure", reason: "Invalid transition" };
+};
+
+console.log(
+  "transitionTask",
+  transitionTask(
+    {
+      id: "t9",
+      title: "Release app",
+      ownerId: "u9",
+      state: TaskState.Pending,
+      tags: new Set(["release"]),
+      updatedAtMs: 1000,
+    },
+    TaskState.Running,
+    2000,
+  ),
+);

@@ -5,10 +5,8 @@
 //         Map / Set / Array, and special types (unknown, never, any, union, tuple)
 // =============================================================================
 
-
-
 // =============================================================================
-// 🟢 EXERCISE 01 — FILL IN THE BLANKS 
+// 🟢 EXERCISE 01 — FILL IN THE BLANKS
 // Domain: E-commerce Marketplace — Product Catalog
 // =============================================================================
 /**
@@ -48,44 +46,44 @@ class Product {
   public name: string;
   public price: number;
   public stock: number;
-  private discountRate: number;   // ← already filled as an example
+  private discountRate: number; // ← already filled as an example
 
   constructor(
-    ___ : number,   // id
-    ___ : string,   // name
-    ___ : number,   // price
-    ___ : number    // stock
+    id: number, // id
+    name: string, // name
+    price: number, // price
+    stock: number, // stock
   ) {
-    this.id            = ___;
-    this.name          = ___;
-    this.price         = ___;
-    this.stock         = ___;
-    this.discountRate  = 0;
+    this.id = id;
+    this.name = name;
+    this.price = price;
+    this.stock = stock;
+    this.discountRate = 0;
   }
 
-  applyDiscount(rate: ___): ___ {
+  applyDiscount(rate: number): void {
     if (rate < 0) rate = 0;
     if (rate > 1) rate = 1;
-    this.___ = rate;
+    this.discountRate = rate;
   }
 
   get finalPrice(): number {
-    return parseFloat((this.price * (1 - this.___)).toFixed(2));
+    return parseFloat((this.price * (1 - this.discountRate)).toFixed(2));
   }
 
   restock(quantity: number): void {
     if (quantity < 0) return;
-    this.___ += ___;
+    this.stock += quantity;
   }
 
-  sell(quantity: number): ___ {
-    if (quantity > this.stock) return ___;
-    this.stock -= ___;
-    return ___;
+  sell(quantity: number): boolean {
+    if (quantity > this.stock) return false;
+    this.stock -= quantity;
+    return true;
   }
 
   toString(): string {
-    return `[Product #${this.___}] ${this.___} — €${this.___} (${this.___} in stock)`;
+    return `[Product #${this.name}] ${this.price} — €${this.discountRate} (${this.stock} in stock)`;
   }
 }
 
@@ -118,10 +116,8 @@ console.log(p.finalPrice); // 129.99
 
 */
 
-
-
 // =============================================================================
-// 🟢 EXERCISE 02 — FILL IN THE BLANKS 
+// 🟢 EXERCISE 02 — FILL IN THE BLANKS
 // Domain: EdTech / Learning Platform — Student Enrollment
 // =============================================================================
 /**
@@ -159,54 +155,56 @@ class Course {
   public courseId: string;
   public title: string;
   public maxSeats: number;
-  private enrolledCount: ___; // hint: number
+  private enrolledCount: number; // hint: number
 
   constructor(courseId: string, title: string, maxSeats: number) {
-    this.___ = courseId;
-    this.___ = title;
-    this.___ = maxSeats;
-    this.enrolledCount = ___;
+    this.courseId = courseId;
+    this.title = title;
+    this.maxSeats = maxSeats;
+    this.enrolledCount = 0;
   }
 
-  enroll(): ___ {
-    if (this.enrolledCount >= this.maxSeats) return ___;
-    this.___++;
-    return ___;
+  enroll(): boolean {
+    if (this.enrolledCount >= this.maxSeats) return false;
+    this.enrolledCount++;
+    return true;
   }
 
   get availableSeats(): number {
-    return this.___ - this.___;
+    return this.maxSeats - this.enrolledCount;
   }
 
-  get isFull(): ___ {
-    return this.___ >= this.___;
+  get isFull(): boolean {
+    return this.enrolledCount >= this.maxSeats;
   }
 }
 
 class Student {
   public studentId: string;
   public name: string;
-  private enrolledCourses: ___; // hint: Course[]
+  private enrolledCourses: Course[]; // hint: Course[]
 
   constructor(studentId: string, name: string) {
-    this.___ = studentId;
-    this.___ = name;
+    this.studentId = studentId;
+    this.name = name;
     this.enrolledCourses = [];
   }
 
   enroll(course: Course): string {
-    const alreadyIn = this.enrolledCourses.___( (c) => c.courseId === course.___ );
-    if (___) return `Already enrolled in ${course.title}`;
+    const alreadyIn = this.enrolledCourses.some(
+      (c) => c.courseId === course.courseId,
+    );
+    if (alreadyIn) return `Already enrolled in ${course.title}`;
 
-    const success = course.___();
+    const success = course.enroll();
     if (!success) return `Course ${course.title} is full`;
 
-    this.enrolledCourses.___( course );
+    this.enrolledCourses.push(course);
     return `Enrolled in ${course.title}`;
   }
 
   getCourseList(): string[] {
-    return this.enrolledCourses.map( (c) => c.___ );
+    return this.enrolledCourses.map((c) => c.title);
   }
 }
 
@@ -233,8 +231,6 @@ console.log(alice.enroll(python)); // "Enrolled in Python Basics"
 console.log(alice.getCourseList()); // ["Linear Algebra", "Python Basics"]
 
 */
-
-
 
 // =============================================================================
 // 🟢 EXERCISE 03
@@ -271,7 +267,52 @@ console.log(alice.getCourseList()); // ["Linear Algebra", "Python Basics"]
  */
 
 // → Write your implementation here
+class BankAccount {
+  public accountNumber: string;
+  public owner: string;
+  private balance: number;
+  private transactions: Array<{ type: string; amount: number; date: Date }>;
 
+  constructor(accountNumber: string, owner: string) {
+    this.accountNumber = accountNumber;
+    this.owner = owner;
+    this.balance = 0;
+    this.transactions = [];
+  }
+
+  deposit(amount: number): void {
+    if (amount <= 0) {
+      throw new Error("Deposit amount must be positive");
+    }
+    this.balance += amount;
+    this.transactions.push({ type: "deposit", amount, date: new Date() });
+  }
+
+  withdraw(amount: number): void {
+    if (amount <= 0) {
+      throw new Error("Withdrawal amount must be positive");
+    } else if (this.balance <= 0) {
+      throw new Error("Insufficient funds");
+    }
+    this.balance -= amount;
+    this.transactions.push({ type: "withdrawal", amount, date: new Date() });
+  }
+
+  currentBalance(): number {
+    return this.balance;
+  }
+
+  getStatement(): string {
+    let statement = "=== Account Statement ===\n";
+
+    for (let transaction of this.transactions) {
+      statement += `${transaction.type}  €${transaction.amount}  ${transaction.date.toISOString()}\n`;
+    }
+
+    statement += `Balance: €${this.balance}`;
+    return statement;
+  }
+}
 
 /* ------------------------------------------------------------------
  * TEST SCENARIO — Exercise 03
@@ -297,8 +338,6 @@ console.log(acc.getStatement());
 // deposit     €500   <date>
 // withdrawal  €200   <date>
 // Balance: €1300
-
-*/
 
 
 
@@ -338,6 +377,83 @@ console.log(acc.getStatement());
 
 // → Write your implementation here
 
+class BaseSeller {
+  public sellerId: string;
+  public storeName: string;
+  protected products: Product[];
+
+  constructor(sellerId: string, storeName: string) {
+    this.sellerId = sellerId;
+    this.storeName = storeName;
+    this.products = [];
+  }
+
+  addProduct(product: Product): void {
+    this.products.push(product);
+  }
+
+  removeProduct(id: number): boolean {
+    return this.products.splice(id, 1);
+  }
+
+  getInventoryValue(): number {
+    let total = 0;
+
+    for (const product of this.products) {
+      total += product.finalPrice * product.stock;
+    }
+    return total;
+  }
+
+  describe(): string {
+    return `[Seller] ${this.storeName} — ${this.products.length} products`;
+  }
+}
+
+class PremiumSeller extends BaseSeller {
+  public commissionRate: number;
+
+  constructor(sellerId: string, storeName: string, commissionRate: number) {
+    super(sellerId, storeName);
+    this.commissionRate = commissionRate;
+  }
+
+  override getInventoryValue(): number {
+    return super.getInventoryValue() * (1 - this.commissionRate);
+  }
+
+  override describe(): string {
+    return `[Premium Seller] ${this.storeName} — ${this.products.length} products (commission: ${this.commissionRate * 100}%)`;
+  }
+
+  applyBulkDiscount(rate: number): void {
+    for (const product of this.products) {
+      product.applyDiscount(rate);
+    }
+  }
+}
+
+class VerifiedSeller extends PremiumSeller {
+  public verifiedSince: Date;
+
+  constructor(
+    sellerId: string,
+    storeName: string,
+    commissionRate: number,
+    verifiedSince: Date,
+  ) {
+    super(sellerId, storeName, commissionRate);
+    this.verifiedSince = verifiedSince;
+  }
+
+  override describe(): string {
+    return `[Verified Seller] ${this.storeName} — ${this.products.length} products (commission: ${this.commissionRate * 100}%) ✓ Verified since ${this.verifiedSince.getFullYear()}`;
+  }
+
+  getVerificationAge(): number {
+    return new Date().getFullYear() - this.verifiedSince.getFullYear();
+  }
+}
 
 /* ------------------------------------------------------------------
  * TEST SCENARIO — Exercise 04
@@ -369,8 +485,6 @@ console.log(vs.describe());       // 2 products now
 console.log(vs.getVerificationAge()); // ~6 (depends on current year)
 
 */
-
-
 
 // =============================================================================
 // 🟡 EXERCISE 05
@@ -429,7 +543,6 @@ console.log(vs.getVerificationAge()); // ~6 (depends on current year)
 
 // → Write your implementation here
 
-
 /* ------------------------------------------------------------------
  * TEST SCENARIO — Exercise 05
  * ------------------------------------------------------------------
@@ -465,8 +578,6 @@ portfolio.removeAsset("TSLA");
 console.log(portfolio.getTotalValue()); // 3850
 
 */
-
-
 
 // =============================================================================
 // 🟡 EXERCISE 06
@@ -506,7 +617,6 @@ console.log(portfolio.getTotalValue()); // 3850
 
 // → Write your implementation here
 
-
 /* ------------------------------------------------------------------
  * TEST SCENARIO — Exercise 06
  * ------------------------------------------------------------------
@@ -539,10 +649,8 @@ console.log(session.getReport());
 
 */
 
-
-
 // =============================================================================
-// 🔴 EXERCISE 07 
+// 🔴 EXERCISE 07
 // Domain: Marketplace — Order Management with Advanced Interfaces & Types
 // =============================================================================
 /**
@@ -603,7 +711,6 @@ console.log(session.getReport());
 
 // → Write your implementation here
 
-
 /* ------------------------------------------------------------------
  * TEST SCENARIO — Exercise 07
  * ------------------------------------------------------------------
@@ -654,7 +761,6 @@ console.log(order.getInvoice());
 // Status: delivered
 
 */
-
 
 // =============================================================================
 // 🔴 EXERCISE 08
@@ -717,7 +823,6 @@ console.log(order.getInvoice());
 
 // → Write your implementation here
 
-
 /* ------------------------------------------------------------------
  * TEST SCENARIO — Exercise 08
  * ------------------------------------------------------------------
@@ -754,8 +859,6 @@ async function runEx09() {
 runEx09();
 
 */
-
-
 
 // =============================================================================
 // ⚫ EXERCISE 10
@@ -842,7 +945,6 @@ runEx09();
 
 // → Write your implementation here
 
-
 /* ------------------------------------------------------------------
  * TEST SCENARIO — Exercise 10
  * ------------------------------------------------------------------
@@ -901,8 +1003,6 @@ try {
 console.log(house.getFullLog().length); // all events from all auctions
 
 */
-
-
 
 // =============================================================================
 // 💥 MEGA PROBLEM — Multi-Domain Platform: "NexusHub"
@@ -1079,8 +1179,6 @@ console.log(house.getFullLog().length); // all events from all auctions
  */
 
 // → Write your NexusHub implementation here
-
-
 
 /* ------------------------------------------------------------------
  * FULL TEST SCENARIO — NexusHub Mega Problem
