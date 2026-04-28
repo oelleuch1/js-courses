@@ -271,7 +271,6 @@ class Product {
 
 class PremiumProduct extends Product {
   category: string;
-
 }
 
 
@@ -280,10 +279,10 @@ function decribeProduct(p: Product) {
 }
 
 const standProduct = new Product(1, 'Phone', 1000)
-const prremiumPeoduct = new PremiumProduct(2, 'Prem Phone', 800)
+const prremiumProduct = new PremiumProduct(2, 'Prem Phone', 800)
 
 decribeProduct(standProduct)
-decribeProduct(prremiumPeoduct)
+decribeProduct(prremiumProduct)
 
 ```ts
 interface Notifier {
@@ -322,6 +321,10 @@ Bad:
 ```ts
 class CheckoutService {
   private gateway = new StripeGateway();
+
+  checkout(orderId: string, amount: number): Promise<string> {
+    return this.gateway.pay(orderId, amount);
+  }
 }
 ```
 
