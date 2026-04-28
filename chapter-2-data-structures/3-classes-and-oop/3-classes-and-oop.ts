@@ -41,6 +41,9 @@
  * Fill every blank marked ___. Do NOT change anything else.
  */
 
+// const product = new Product(1, 'iphone', 1200, 10) => this line exec the contructor
+// product.finalPrice
+
 class Product {
   public id: number;
   public name: string;
@@ -288,14 +291,15 @@ class BankAccount {
     this.transactions.push({ type: "deposit", amount, date: new Date() });
   }
 
-  withdraw(amount: number): void {
+  withdraw(amount: number): boolean {
     if (amount <= 0) {
       throw new Error("Withdrawal amount must be positive");
-    } else if (this.balance <= 0) {
+    } else if (this.balance < amount) {
       throw new Error("Insufficient funds");
     }
     this.balance -= amount;
     this.transactions.push({ type: "withdrawal", amount, date: new Date() });
+    return true;
   }
 
   currentBalance(): number {
@@ -313,6 +317,19 @@ class BankAccount {
     return statement;
   }
 }
+
+// const bankAccount = new BankAccount('123456789', 'Bob');
+// bankAccount.deposit(100);
+
+// const transmationResult = bankAccount.withdraw(200);
+// if (transmationResult === true)
+
+// try {
+ // bankAccount.withdraw(200);
+//} catch(e) {
+// showAlert(e.message)
+//}
+
 
 /* ------------------------------------------------------------------
  * TEST SCENARIO — Exercise 03
@@ -393,16 +410,20 @@ class BaseSeller {
   }
 
   removeProduct(id: number): boolean {
-    return this.products.splice(id, 1);
+    // return this.products.splice(id, 1);
+    // @TODO
+    return false;
   }
 
   getInventoryValue(): number {
-    let total = 0;
+    /** let total = 0;
 
     for (const product of this.products) {
       total += product.finalPrice * product.stock;
     }
-    return total;
+    return total; **/
+    // @TODO use reduce
+    return 0;
   }
 
   describe(): string {
@@ -414,7 +435,7 @@ class PremiumSeller extends BaseSeller {
   public commissionRate: number;
 
   constructor(sellerId: string, storeName: string, commissionRate: number) {
-    super(sellerId, storeName);
+    super(sellerId, storeName); // BaseSeller.contructor(sellerId, storeName)
     this.commissionRate = commissionRate;
   }
 

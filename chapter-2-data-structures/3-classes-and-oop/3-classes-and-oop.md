@@ -259,6 +259,32 @@ This keeps design explicit and avoids many diamond-problem issues from tradition
 
 Polymorphism means one API, many implementations.
 
+class Product {
+  id: string;
+  name: string;
+  price: number;
+
+  toString() {
+    return 'Product: id, name; price';
+  }
+}
+
+class PremiumProduct extends Product {
+  category: string;
+
+}
+
+
+function decribeProduct(p: Product) {
+  return p.toString()
+}
+
+const standProduct = new Product(1, 'Phone', 1000)
+const prremiumPeoduct = new PremiumProduct(2, 'Prem Phone', 800)
+
+decribeProduct(standProduct)
+decribeProduct(prremiumPeoduct)
+
 ```ts
 interface Notifier {
   send(userId: string, message: string): Promise<void>;
