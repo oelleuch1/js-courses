@@ -110,82 +110,128 @@ function calculatePrice(price: number, rule: PricingRule): number {
 
 Subtypes must be safely replaceable for base types.
 
-Bad: `Penguin` breaks the promise that every `Bird` can fly.
+The rule is not "never use inheritance." 
+
+The rule is: do not create a subtype that removes or breaks behavior promised by the base type.
+
+Bad: `MarketplaceOrder` breaks the promise that every `Order` can be paid and shipped the same way.
 
 ```ts
-class Bird {
-  fly(): void {
-    console.log("Flying");
+class Order {
+  constructor(public readonly id: string, public readonly total: number) {}
+
+  pay(): void {
+    console.log(`Charging ${this.total}`);
+  }
+
+  ship(): void {
+    console.log(`Shipping order ${this.id}`);
   }
 }
 
-class Penguin extends Bird {
-  override fly(): void {
-    throw new Error("Penguins cannot fly");
+class MarketplaceOrder extends Order {
+  override pay(): void {
+    console.log("Payment is handled by the marketplace");
+  }
+
+  override ship(): void {
+    throw new Error("Marketplace seller ships this order");
   }
 }
 
-function makeBirdFly(bird: Bird): void {
-  bird.fly();
+function completeOrder(order: Order): void {
+  order.pay();
+  order.ship();
 }
 ```
 
-Good: model the behavior more precisely.
+`completeOrder(new MarketplaceOrder("order-1", 50))` looks valid because `MarketplaceOrder` is an `Order`, but it fails when `ship()` is called. The subtype changed what callers can safely expect.
+
+Good: model the workflow more precisely. A marketplace order is still an order, but it is not a platform-fulfilled order.
 
 ```ts
-interface Bird {
-  eat(): void;
+interface Order {
+  id: string;
+  total: number;
 }
 
-interface FlyingBird extends Bird {
-  fly(): void;
+interface PayableOrder extends Order {
+  pay(): void;
 }
 
-class Sparrow implements FlyingBird {
-  eat(): void {
-    console.log("Sparrow eats seeds");
+interface ShippableOrder extends Order {
+  ship(): void;
+}
+
+class PlatformOrder implements PayableOrder, ShippableOrder {
+  constructor(public readonly id: string, public readonly total: number) {}
+
+  pay(): void {
+    console.log(`Charging ${this.total}`);
   }
 
-  fly(): void {
-    console.log("Sparrow flies");
+  ship(): void {
+    console.log(`Shipping order ${this.id}`);
   }
 }
 
-class Penguin implements Bird {
-  eat(): void {
-    console.log("Penguin eats fish");
+class MarketplaceOrder implements Order {
+  constructor(public readonly id: string, public readonly total: number) {}
+
+  notifySeller(): void {
+    console.log(`Asking seller to fulfill order ${this.id}`);
   }
 }
 
-function makeFlyingBirdFly(bird: FlyingBird): void {
-  bird.fly();
+function completePlatformOrder(order: PayableOrder & ShippableOrder): void {
+  order.pay();
+  order.ship();
+}
+
+function routeMarketplaceOrder(order: MarketplaceOrder): void {
+  order.notifySeller();
 }
 ```
+
 
 ### I - Interface Segregation Principle
 
-Prefer small focused interfaces to one large interface.
+Prefer focused interfaces when different clients need different capabilities.
 
-Bad: classes are forced to implement methods they do not need.
+Do not split every interface automatically. If the methods naturally belong together and all clients need them, one interface is fine:
 
 ```ts
-interface Repository<T> {
-  findById(id: string): T | undefined;
-  save(item: T): void;
-  delete(id: string): void;
+interface PaymentProcessor {
+  authorize(amount: number): string;
+  capture(authorizationId: string): void;
+  refund(paymentId: string): void;
+}
+```
+
+Splitting this into `Authorizer`, `Capturer`, and `Refunder` would usually make the design noisier if every checkout flow needs the complete payment lifecycle.
+
+Split an interface when a class or client is forced to depend on operations it does not use.
+
+Bad: a worker that only sends email must also implement SMS and push notification methods.
+
+```ts
+interface NotificationChannel {
+  sendEmail(to: string, message: string): void;
+  sendSms(to: string, message: string): void;
+  sendPush(userId: string, message: string): void;
 }
 
-class ReadOnlyProductRepository implements Repository<Product> {
-  findById(id: string): Product | undefined {
-    return undefined;
+class EmailNotificationChannel implements NotificationChannel {
+  sendEmail(to: string, message: string): void {
+    console.log(`Email to ${to}: ${message}`);
   }
 
-  save(item: Product): void {
-    throw new Error("Read-only repository");
+  sendSms(to: string, message: string): void {
+    throw new Error("Email channel cannot send SMS");
   }
 
-  delete(id: string): void {
-    throw new Error("Read-only repository");
+  sendPush(userId: string, message: string): void {
+    throw new Error("Email channel cannot send push notifications");
   }
 }
 ```
@@ -193,32 +239,36 @@ class ReadOnlyProductRepository implements Repository<Product> {
 Good: split interfaces by client need.
 
 ```ts
-interface ReadableRepository<T> {
-  findById(id: string): T | undefined;
+interface EmailSender {
+  sendEmail(to: string, message: string): void;
 }
 
-interface WritableRepository<T> {
-  save(item: T): void;
+interface SmsSender {
+  sendSms(to: string, message: string): void;
 }
 
-interface DeletableRepository {
-  delete(id: string): void;
+interface PushSender {
+  sendPush(userId: string, message: string): void;
 }
 
-class ProductReader implements ReadableRepository<Product> {
-  findById(id: string): Product | undefined {
-    return undefined;
+class EmailNotificationChannel implements EmailSender {
+  sendEmail(to: string, message: string): void {
+    console.log(`Email to ${to}: ${message}`);
   }
 }
 
-class ProductWriter implements WritableRepository<Product> {
-  save(item: Product): void {
-    console.log(`Saving ${item.name}`);
+class SmsNotificationChannel implements SmsSender {
+  sendSms(to: string, message: string): void {
+    console.log(`SMS to ${to}: ${message}`);
   }
+}
+
+function sendOrderReceipt(sender: EmailSender, email: string): void {
+  sender.sendEmail(email, "Your order receipt");
 }
 ```
 
-Clients now depend only on the behavior they actually use.
+Clients now depend only on the behavior they actually use. The split is useful because email, SMS, and push can be implemented and consumed independently.
 
 ### D - Dependency Inversion Principle
 
