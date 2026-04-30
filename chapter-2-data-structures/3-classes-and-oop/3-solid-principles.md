@@ -20,6 +20,8 @@ class UserService {
     console.log(`Sending welcome email to ${email}`);
   }
 }
+// main
+const userService = new UserService();
 ```
 
 Good: split responsibilities.
@@ -30,6 +32,10 @@ class UserValidator {
     if (!email.includes("@")) {
       throw new Error("Invalid email");
     }
+  }
+
+  validatePhoneNumber(phone: string): void {
+    // regex validation
   }
 }
 
@@ -58,6 +64,13 @@ class UserRegistrationService {
     this.emailSender.send(email);
   }
 }
+
+// main
+const validator = new UserValidator();
+const repo = new userRepository();
+const sender = new WelcomeEmailSender();
+
+const userService = new UserRegistrationService(validor, repo, sender);
 ```
 
 ### O - Open/Closed Principle
@@ -67,11 +80,12 @@ Open for extension, closed for modification.
 Bad: every new discount type requires editing this function.
 
 ```ts
-type DiscountType = "none" | "student" | "vip";
+type DiscountType = "none" | "student" | "vip" | "employee";
 
 function applyDiscount(type: DiscountType, price: number): number {
   if (type === "student") return price * 0.9;
   if (type === "vip") return price * 0.8;
+  if (type === "employee") return price * 0.85;
   return price;
 }
 ```
@@ -104,6 +118,16 @@ class VipDiscount implements PricingRule {
 function calculatePrice(price: number, rule: PricingRule): number {
   return rule.apply(price);
 }
+
+
+class EmployeeDiscount implements PricingRule {
+  apply(price: number): number {
+    return price * 0.85;
+  }
+}
+
+calculatePrice(10, new VipDiscount())  => 8;
+calculatePrice(10, new EmployeeDiscount()) => 8.5;
 ```
 
 ### L - Liskov Substitution Principle
@@ -163,7 +187,7 @@ interface ShippableOrder extends Order {
   ship(): void;
 }
 
-class PlatformOrder implements PayableOrder, ShippableOrder {
+class FullFilmentOrder implements PayableOrder, ShippableOrder {
   constructor(public readonly id: string, public readonly total: number) {}
 
   pay(): void {
@@ -175,21 +199,21 @@ class PlatformOrder implements PayableOrder, ShippableOrder {
   }
 }
 
-class MarketplaceOrder implements Order {
+class MarketplaceOrder implements PayableOrder {
   constructor(public readonly id: string, public readonly total: number) {}
 
-  notifySeller(): void {
-    console.log(`Asking seller to fulfill order ${this.id}`);
+  pay(): void {
+    console.log(`Charging ${this.total}`);
   }
 }
 
-function completePlatformOrder(order: PayableOrder & ShippableOrder): void {
+function completeFullfilmentOrder(order: PayableOrder & ShippableOrder): void {
   order.pay();
   order.ship();
 }
 
-function routeMarketplaceOrder(order: MarketplaceOrder): void {
-  order.notifySeller();
+function completeMarketplaceOrder(order: MarketplaceOrder): void {
+  order.pay();
 }
 ```
 
@@ -251,10 +275,15 @@ interface PushSender {
   sendPush(userId: string, message: string): void;
 }
 
-class EmailNotificationChannel implements EmailSender {
+class EmailNotificationChannel implements EmailSender, SmsSender {
   sendEmail(to: string, message: string): void {
     console.log(`Email to ${to}: ${message}`);
   }
+
+    sendSms(to: string, message: string): void {
+          console.log(`Sms to ${to}: ${message}`);
+
+    }
 }
 
 class SmsNotificationChannel implements SmsSender {
@@ -284,12 +313,16 @@ class MySqlOrderRepository {
 }
 
 class OrderService {
-  private readonly repository = new MySqlOrderRepository();
+  constructor(private readonly repository: MySqlOrderRepository) {}
 
   placeOrder(orderId: string): void {
     this.repository.save(orderId);
   }
 }
+const sqlRepo = new MySqlOrderRepository();
+
+const orderService1 = new OrderService(sqlRepo);
+const orderService2 = new OrderService(sqlRepo);
 ```
 
 Good: business code depends on an abstraction.

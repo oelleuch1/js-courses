@@ -409,7 +409,8 @@ class BaseSeller {
   }
 
   removeProduct(id: number): boolean {
-    const product = this.products.find((p) => p.id === id);
+    const product = this.products.some((p) => p.id === id);
+    // find: return product ? product.name : null
     if (product) {
       this.products = this.products.filter((p) => p.id !== id);
       return true;

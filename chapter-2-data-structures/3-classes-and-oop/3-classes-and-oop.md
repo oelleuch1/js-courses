@@ -141,6 +141,25 @@ class Order {
     this._status = "cancelled";
   }
 }
+
+
+class User {
+  static count = 0;
+
+  constructor(public name: string, private age: number) {
+    this.count++;
+  }
+}
+
+// const userA = new User('Bob', 25) 
+// counter: 1
+// const userB = new User('Alice', 30)
+// counter: 2
+
+// console.log(user.name) => 'Bob'
+// console.log(user.age) => error because age is private
+
+// console.log(User.count)
 ```
 
 ### Method types
@@ -330,6 +349,56 @@ const exporter = new JsonReportExporter("report.json");
 exporter.export("monthly revenue");
 
 // const base = new ReportExporter("base.txt"); // invalid: abstract class
+
+
+abstract class Animal {
+  public name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  getName() {
+    return this.name;
+  }
+
+  protected abstract getLegsNumber(): number;
+  protected abstract walk(): void;
+}
+
+// const animal = new Animal(); error
+// animal.walk(); error
+
+class Dog extends Animal {
+
+  constructor(name: string) {
+    super(name);
+  }
+
+  getLegsNumber(): number {
+    return 4;
+  }
+
+  walk() {
+    console.log('Walking')
+  }
+}
+// const dog = new Dog("dogName"); // creating instance of Dog class
+// console.log(dog.getName()); => dogName
+
+abstract class Bird extends Animal {
+  override getLegsNumber(): number {
+    return 2;
+  }
+}
+
+class WalkableBird extends Bird {
+   override walk() {
+    console.log('Walking bird')
+   }
+}
+
+
 ```
 
 ### Abstract class vs interface
@@ -340,6 +409,33 @@ Use an `interface` when you only need a contract:
 interface CanExport {
   export(data: string): void;
 }
+
+
+class ChartsExporter implements CanExport {
+  export(data: string) {
+    console.log('ChartsExporter', data)
+  }
+}
+
+
+abstract class Exportable {
+  exportType: string;
+
+  abstract export(data: string): void;
+
+  toString() {
+    console.log('Export with type:', exportType);
+  }
+
+}
+
+
+class ChartsExporter extends Exportable {
+  export(data: string) {
+    console.log('ChartsExporter', data)
+  }
+}
+
 ```
 
 Use an `abstract class` when you need:
