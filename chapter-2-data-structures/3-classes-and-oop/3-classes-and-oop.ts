@@ -325,11 +325,10 @@ class BankAccount {
 // if (transmationResult === true)
 
 // try {
- // bankAccount.withdraw(200);
+// bankAccount.withdraw(200);
 //} catch(e) {
 // showAlert(e.message)
 //}
-
 
 /* ------------------------------------------------------------------
  * TEST SCENARIO — Exercise 03
@@ -410,12 +409,21 @@ class BaseSeller {
   }
 
   removeProduct(id: number): boolean {
+    const product = this.products.find((p) => p.id === id);
+    if (product) {
+      this.products = this.products.filter((p) => p.id !== id);
+      return true;
+    } else {
+      return false;
+    }
+
     // return this.products.splice(id, 1);
     // @TODO
-    return false;
+    // return false;
   }
 
   getInventoryValue(): number {
+    return this.products.reduce((acc, curr) => acc + curr.finalPrice * curr.stock, 0);
     /** let total = 0;
 
     for (const product of this.products) {
@@ -423,7 +431,6 @@ class BaseSeller {
     }
     return total; **/
     // @TODO use reduce
-    return 0;
   }
 
   describe(): string {
@@ -563,6 +570,126 @@ console.log(vs.getVerificationAge()); // ~6 (depends on current year)
  */
 
 // → Write your implementation here
+interface IAsset {
+  symbol: string;
+  currentPrice: number;
+  getValue(): number;
+  getSummary(): string;
+}
+
+interface IPriceable {
+  updatePrice(newPrice: number): void;
+  priceHistory: number[];
+}
+
+interface ITradeable extends IAsset, IPriceable {
+  buy(quantity: number): void;
+  sell(quantity: number): void;
+  quantity: number;
+}
+
+class Stock implements ITradeable {
+  public symbol: string;
+  public currentPrice: number;
+  public quantity: number;
+  public priceHistory: number[];
+  public companyName: string;
+
+  constructor(symbol: string, currentPrice: number, quantity: number, companyName: string) {
+    this.symbol = symbol;
+    this.currentPrice = currentPrice;
+    this.quantity = quantity;
+    this.priceHistory = [];
+    this.companyName = companyName;
+  }
+  
+  buy(quantity: number): void {
+    this.quantity += quantity;
+    this.priceHistory.push(this.currentPrice);
+  }
+
+  sell(quantity: number): void {
+    if (quantity > this.quantity) {
+      throw new Error("Insufficient quantity");
+    }
+    this.quantity -= quantity;
+    this.priceHistory.push(this.currentPrice);
+  }
+
+  updatePrice(newPrice: number): void {
+    this.currentPrice = newPrice;
+    this.priceHistory.push(newPrice);
+  }
+
+  getValue(): number {
+    return this.currentPrice * this.quantity;
+  }
+  
+  getSummary(): string {
+    return `${this.symbol} (${this.companyName}) — qty: ${this.quantity} @ €${this.currentPrice} = €${this.getValue()}`;
+  }
+}
+
+class Bond implements IAsset {
+  public symbol: string;
+  public currentPrice: number;
+  public faceValue: number;
+  public couponRate: number;
+  public maturityDate: Date;
+
+
+  constructor(symbol: string, currentPrice: number, faceValue: number, couponRate: number, maturityDate: Date) {
+    this.symbol = symbol;
+    this.currentPrice = currentPrice;
+    this.faceValue = faceValue;
+    this.couponRate = couponRate;
+    this.maturityDate = maturityDate;
+  }
+  
+  getValue(): number {
+    return this.faceValue;
+  }
+
+  getSummary(): string {
+    return `${this.symbol} Bond — face: €${this.faceValue}, coupon: ${this.couponRate * 100}%, matures: ${this.maturityDate.toISOString()}`;
+  }
+}
+
+class Portfolio {
+  private assets: Map<string, IAsset>;
+
+  constructor() {
+    this.assets = new Map();
+  }
+// ?
+  addAsset(asset: IAsset): void {
+    this.assets.set(asset.symbol, asset);
+  }
+
+  removeAsset(symbol: string): boolean {
+    return this.assets.delete(symbol);
+  }
+  
+  // ?
+  getTotalValue(): number {
+    let total = 0;
+    for (const asset of this.assets.values()) {
+      total += asset.getValue();
+    }
+    return total;
+  }
+
+  getAsset(symbol: string): IAsset | undefined {
+    return this.assets.get(symbol);
+  }
+
+  printReport(): void {
+    for (const asset of this.assets.values()) {
+      console.log(asset.getSummary());
+    }
+  }
+}
+
 
 /* ------------------------------------------------------------------
  * TEST SCENARIO — Exercise 05
@@ -637,6 +764,95 @@ console.log(portfolio.getTotalValue()); // 3850
  */
 
 // → Write your implementation here
+type QuestionDifficulty = "easy" | "medium" | "hard";
+
+interface IQuestion {
+  id: number;
+  prompt: string;
+  correctAnswer: string;
+  check(answer: string): boolean;
+  readonly difficulty: QuestionDifficulty;
+}
+
+type QuizAnswerResult = "correct" | "wrong" | "already answered" | "not found";
+
+
+class Question implements IQuestion {
+  public id: number;
+  public prompt: string;
+  public correctAnswer: string;
+  private wrongAttempts: number;
+
+
+  constructor(id: number, prompt: string, correctAnswer: string) {
+    this.id = id;
+    this.prompt = prompt;
+    this.correctAnswer = correctAnswer;
+    this.wrongAttempts = 0;
+  }
+  
+  check(answer: string): boolean {
+    return answer.toLowerCase() === this.correctAnswer.toLowerCase();
+  }
+
+  get difficulty(): QuestionDifficulty {
+    return this.wrongAttempts === 0 ? "easy" : this.wrongAttempts === 1 ? "medium" : "hard";
+  }
+}
+
+class QuizSession {
+  public sessionId: string;
+  private questions: Map<number, Question>;
+  private answeredIds: Set<number>;
+  private score: number;
+
+  constructor(sessionId: string) {
+    this.sessionId = sessionId;
+    this.questions = new Map();
+    this.answeredIds = new Set();
+    this.score = 0;
+  }
+
+  addQuestion(question: Question): void {
+    this.questions.set(question.id, question);
+  }
+
+  answer(questionId: number, attempt: string): QuizAnswerResult {
+    const question = this.questions.get(questionId);
+    if (!question) {
+      return "not found";
+    }
+    if (this.answeredIds.has(questionId)) return "already answered";
+    if (question.check(attempt)) {
+      this.score++;
+      this.answeredIds.add(questionId);
+      return "correct";
+    }
+    return "wrong";
+  }
+}
+
+// QuizSession
+// *     - sessionId: string
+// *     - private questions: Map<number, Question>  (id → Question)
+// *     - private answeredIds: Set<number>           (ids already answered)
+// *     - private score: number (starts 0)
+// *     - addQuestion(q: Question): void
+// *     - answer(questionId: number, attempt: string): "correct" | "wrong" | "already answered" | "not found"
+// *       · "already answered" if id in answeredIds
+// *       · calls q.check(); if correct → score++ and add to answeredIds
+// *       · if wrong → do NOT add to answeredIds (can retry)
+// *     - getScore(): string  →  "<score>/<total questions>"
+// *     - getRemainingQuestions(): Question[]  — questions NOT yet answered
+// *     - getReport(): string  — for each question: "<prompt> → <difficulty>"
+
+// Question
+//  *     - id: number, prompt: string, correctAnswer: string,
+//  *       private wrongAttempts: number (starts 0)
+//  *     - check(answer: string): boolean — case-insensitive comparison;
+//  *       increments wrongAttempts on failure.
+//  *     - get difficulty(): "easy" | "medium" | "hard"
+//  *       (0 wrong = "easy", 1–2 = "medium", 3+ = "hard")
 
 /* ------------------------------------------------------------------
  * TEST SCENARIO — Exercise 06
