@@ -1304,3 +1304,1022 @@ async function runNexusHub() {
 runNexusHub();
 
 */
+
+// =============================================================================
+// CHAPTER 3 - PART 2 | Advanced TypeScript OOP Exercises
+// Topics: abstract classes, static attributes/methods, inheritance,
+//         polymorphism, dependency inversion, and SOLID principles.
+// =============================================================================
+
+// =============================================================================
+// EXERCISE 01 - Static Members
+// Domain: SaaS - Account Identifier Generator
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * "CloudDesk" needs a small utility class that creates unique account ids.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Implement `AccountIdGenerator`.
+ *
+ * The class must:
+ *  1. Have a private static counter starting at 1.
+ *  2. Have a static readonly prefix = "ACC".
+ *  3. Have a static method `next(): string`
+ *     - returns "ACC-0001", "ACC-0002", etc.
+ *     - increments the counter after every call.
+ *  4. Have a static method `resetForTests(): void`
+ *     - resets counter to 1.
+ *  5. Prevent object creation with a private constructor.
+ *
+ * TASK
+ * ----
+ * Implement the class.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 01
+ * ------------------------------------------------------------------
+
+AccountIdGenerator.resetForTests();
+
+console.log(AccountIdGenerator.next()); // "ACC-0001"
+console.log(AccountIdGenerator.next()); // "ACC-0002"
+console.log(AccountIdGenerator.next()); // "ACC-0003"
+
+// const generator = new AccountIdGenerator(); // should be invalid
+
+*/
+
+// =============================================================================
+// EXERCISE 02 - Abstract Class
+// Domain: Payments - Payment Methods
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * A checkout module needs multiple payment methods. Each method has common
+ * validation, but each method processes payment differently.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Implement:
+ *
+ *   abstract class PaymentMethod
+ *     - constructor(public readonly label: string)
+ *     - public pay(amount: number): string
+ *       - throws Error("Amount must be positive") when amount <= 0
+ *       - otherwise returns this.process(amount)
+ *     - protected abstract process(amount: number): string
+ *
+ *   class CardPayment extends PaymentMethod
+ *     - constructor(cardLast4: string)
+ *     - process(amount) returns:
+ *       "Paid EUR <amount> by card ****<last4>"
+ *
+ *   class WalletPayment extends PaymentMethod
+ *     - constructor(walletId: string)
+ *     - process(amount) returns:
+ *       "Paid EUR <amount> from wallet <walletId>"
+ *
+ * TASK
+ * ----
+ * Implement all classes.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 02
+ * ------------------------------------------------------------------
+
+const card = new CardPayment("4242");
+const wallet = new WalletPayment("WAL-001");
+
+console.log(card.pay(100));   // "Paid EUR 100 by card ****4242"
+console.log(wallet.pay(50));  // "Paid EUR 50 from wallet WAL-001"
+
+try { card.pay(0); } catch (e) { console.log((e as Error).message); }
+// "Amount must be positive"
+
+*/
+
+// =============================================================================
+// EXERCISE 03 - Inheritance and Override
+// Domain: HR - Employees and Managers
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * A company needs to model employees. Managers are employees with a team.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Implement:
+ *
+ *   class Employee
+ *     - employeeId: string
+ *     - fullName: string
+ *     - baseSalary: number
+ *     - constructor(employeeId, fullName, baseSalary)
+ *     - getAnnualSalary(): number = baseSalary * 12
+ *     - describe(): string = "[Employee] <fullName> - EUR <annualSalary>/year"
+ *
+ *   class Manager extends Employee
+ *     - private teamMembers: Employee[] starts empty
+ *     - bonusRate: number
+ *     - addTeamMember(employee: Employee): void
+ *     - getTeamSize(): number
+ *     - override getAnnualSalary(): number
+ *       base annual salary + bonusRate percentage
+ *     - override describe(): string =
+ *       "[Manager] <fullName> - team: <size> - EUR <annualSalary>/year"
+ *
+ * TASK
+ * ----
+ * Implement both classes.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 03
+ * ------------------------------------------------------------------
+
+const dev = new Employee("E001", "Alice Dev", 4000);
+const manager = new Manager("M001", "Bob Lead", 6000, 0.15);
+
+manager.addTeamMember(dev);
+
+console.log(dev.getAnnualSalary());      // 48000
+console.log(manager.getAnnualSalary());  // 82800
+console.log(manager.getTeamSize());      // 1
+console.log(manager.describe());
+// "[Manager] Bob Lead - team: 1 - EUR 82800/year"
+
+*/
+
+// =============================================================================
+// EXERCISE 04 - Polymorphism with Interfaces
+// Domain: Logistics - Shipping Cost Calculator
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * ShopHub supports multiple shipping strategies. Checkout code should not care
+ * which shipping strategy is used.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Define:
+ *
+ *   type ShippingAddress = {
+ *     country: string;
+ *     city: string;
+ *     postalCode: string;
+ *   }
+ *
+ *   interface ShippingStrategy
+ *     - name: string
+ *     - calculate(weightKg: number, address: ShippingAddress): number
+ *
+ * Implement:
+ *
+ *   StandardShipping
+ *     - name = "standard"
+ *     - cost = 5 + weightKg * 1.2
+ *
+ *   ExpressShipping
+ *     - name = "express"
+ *     - cost = 12 + weightKg * 2.5
+ *
+ *   InternationalShipping
+ *     - name = "international"
+ *     - cost = 20 + weightKg * 4
+ *     - if address.country === "France", use standard-like cost instead.
+ *
+ *   ShippingQuoteService
+ *     - constructor(private readonly strategy: ShippingStrategy)
+ *     - quote(weightKg, address): string
+ *       returns "<strategy.name>: EUR <cost>"
+ *
+ * TASK
+ * ----
+ * Implement the type, interface, and classes.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 04
+ * ------------------------------------------------------------------
+
+const paris = { country: "France", city: "Paris", postalCode: "75001" };
+const tokyo = { country: "Japan", city: "Tokyo", postalCode: "100-0001" };
+
+const standardQuote = new ShippingQuoteService(new StandardShipping());
+const expressQuote = new ShippingQuoteService(new ExpressShipping());
+const internationalQuote = new ShippingQuoteService(new InternationalShipping());
+
+console.log(standardQuote.quote(10, paris));       // "standard: EUR 17"
+console.log(expressQuote.quote(10, paris));        // "express: EUR 37"
+console.log(internationalQuote.quote(10, tokyo));  // "international: EUR 60"
+
+*/
+
+// =============================================================================
+// EXERCISE 05 - Dependency Inversion
+// Domain: Reporting - Export and Storage
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * A reporting service must export reports. It should not depend directly on
+ * local files, cloud storage, or email delivery.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Define:
+ *
+ *   interface ReportStorage
+ *     - save(fileName: string, content: string): string
+ *
+ * Implement:
+ *
+ *   LocalReportStorage implements ReportStorage
+ *     - save returns "Saved <fileName> locally"
+ *
+ *   CloudReportStorage implements ReportStorage
+ *     - constructor(bucketName: string)
+ *     - save returns "Saved <fileName> to bucket <bucketName>"
+ *
+ *   ReportService
+ *     - constructor(private readonly storage: ReportStorage)
+ *     - generateMonthlyReport(month: string, rows: string[]): string
+ *       - creates fileName = "report-<month>.txt"
+ *       - content is rows joined by "\n"
+ *       - delegates saving to storage.save(fileName, content)
+ *
+ * TASK
+ * ----
+ * Implement all classes using dependency inversion.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 05
+ * ------------------------------------------------------------------
+
+const localReports = new ReportService(new LocalReportStorage());
+console.log(localReports.generateMonthlyReport("2026-04", ["sales: 100", "refunds: 3"]));
+// "Saved report-2026-04.txt locally"
+
+const cloudReports = new ReportService(new CloudReportStorage("finance-prod"));
+console.log(cloudReports.generateMonthlyReport("2026-04", ["sales: 100"]));
+// "Saved report-2026-04.txt to bucket finance-prod"
+
+*/
+
+// =============================================================================
+// EXERCISE 06 - SOLID Refactor
+// Domain: E-commerce - Invoice Processing
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * The current invoice code does too much in one class. Refactor the design using
+ * SRP, OCP, and DIP.
+ *
+ * STARTING BAD DESIGN
+ * -------------------
+ *
+ * class BadInvoiceProcessor {
+ *   process(customerEmail: string, amount: number, type: "pdf" | "html") {
+ *     if (!customerEmail.includes("@")) throw new Error("Invalid email");
+ *     const content = type === "pdf" ? `PDF:${amount}` : `<html>${amount}</html>`;
+ *     console.log("saving invoice");
+ *     console.log(`email sent to ${customerEmail}: ${content}`);
+ *   }
+ * }
+ *
+ * REQUIREMENTS
+ * ------------
+ * Implement:
+ *
+ *   interface InvoiceFormatter
+ *     - format(amount: number): string
+ *
+ *   PdfInvoiceFormatter
+ *     - format returns "PDF invoice: EUR <amount>"
+ *
+ *   HtmlInvoiceFormatter
+ *     - format returns "<h1>Invoice EUR <amount></h1>"
+ *
+ *   InvoiceValidator
+ *     - validateEmail(email: string): void
+ *
+ *   InvoiceRepository
+ *     - private invoices: string[]
+ *     - save(content: string): void
+ *     - getAll(): string[]
+ *
+ *   InvoiceEmailSender
+ *     - send(email: string, content: string): string
+ *
+ *   InvoiceProcessor
+ *     - constructor(validator, formatter, repository, emailSender)
+ *     - process(email, amount): string
+ *       validates, formats, saves, sends, then returns sender result.
+ *
+ * TASK
+ * ----
+ * Implement the refactored SOLID design.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 06
+ * ------------------------------------------------------------------
+
+const invoiceRepo = new InvoiceRepository();
+const invoiceProcessor = new InvoiceProcessor(
+  new InvoiceValidator(),
+  new PdfInvoiceFormatter(),
+  invoiceRepo,
+  new InvoiceEmailSender()
+);
+
+console.log(invoiceProcessor.process("alice@example.com", 250));
+// "Invoice email sent to alice@example.com"
+
+console.log(invoiceRepo.getAll());
+// ["PDF invoice: EUR 250"]
+
+try { invoiceProcessor.process("bad-email", 100); }
+catch (e) { console.log((e as Error).message); }
+// "Invalid email"
+
+*/
+
+// =============================================================================
+// EXERCISE 07 - Abstract Rules + Static Classification
+// Domain: FinTech - Risk Rules
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * A payment platform evaluates transactions with multiple risk rules.
+ * Rules share common validation but each rule has its own scoring logic.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Define:
+ *
+ *   type RiskTransaction = {
+ *     transactionId: string;
+ *     userId: string;
+ *     amount: number;
+ *     country: string;
+ *     hour: number; // 0-23
+ *   }
+ *
+ *   type RiskLevel = "low" | "medium" | "high" | "critical"
+ *
+ * Implement:
+ *
+ *   abstract class RiskRule
+ *     - static readonly maxScore = 100
+ *     - constructor(public readonly code: string)
+ *     - evaluate(tx): number
+ *       - throws Error("Invalid transaction amount") when amount <= 0
+ *       - returns this.score(tx), clamped between 0 and maxScore
+ *     - protected abstract score(tx): number
+ *
+ *   LargeAmountRule extends RiskRule
+ *     - score 0 below 1000, 30 below 5000, 70 below 20000, 100 otherwise
+ *
+ *   NightTransactionRule extends RiskRule
+ *     - score 40 when hour is between 0 and 5, otherwise 0
+ *
+ *   ForeignCountryRule extends RiskRule
+ *     - constructor(homeCountry: string)
+ *     - score 35 when tx.country differs from homeCountry, otherwise 0
+ *
+ *   RiskEngine
+ *     - private rules: RiskRule[]
+ *     - static classify(score: number): RiskLevel
+ *       0-29 low, 30-59 medium, 60-89 high, 90+ critical
+ *     - addRule(rule): void
+ *     - analyze(tx): { score: number; level: RiskLevel; details: string[] }
+ *       details contains "<rule.code>: <score>"
+ *
+ * TASK
+ * ----
+ * Implement the risk engine.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 07
+ * ------------------------------------------------------------------
+
+const riskEngine = new RiskEngine();
+riskEngine.addRule(new LargeAmountRule());
+riskEngine.addRule(new NightTransactionRule());
+riskEngine.addRule(new ForeignCountryRule("France"));
+
+const riskResult = riskEngine.analyze({
+  transactionId: "TX-1",
+  userId: "U-1",
+  amount: 7000,
+  country: "Japan",
+  hour: 2,
+});
+
+console.log(riskResult.level);   // "critical" (70 + 40 + 35 clamped to 100)
+console.log(riskResult.score);   // 100
+console.log(riskResult.details); // ["large_amount: 70", "night: 40", "foreign_country: 35"]
+
+*/
+
+// =============================================================================
+// EXERCISE 08 - Polymorphic Import Pipeline
+// Domain: Data Platform - File Importers
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * A data platform imports users from different file formats. The import pipeline
+ * should work with any importer that respects the same contract.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Define:
+ *
+ *   type ImportedUser = {
+ *     id: string;
+ *     email: string;
+ *     name: string;
+ *   }
+ *
+ *   interface UserImporter
+ *     - sourceType: "csv" | "json" | "api"
+ *     - import(raw: string): ImportedUser[]
+ *
+ * Implement:
+ *
+ *   CsvUserImporter
+ *     - expects rows like "id,email,name"
+ *     - ignores blank rows
+ *
+ *   JsonUserImporter
+ *     - expects raw JSON array of ImportedUser
+ *     - validates that parsed data is an array
+ *
+ *   ApiUserImporter
+ *     - expects raw JSON with shape { data: ImportedUser[] }
+ *
+ *   UserImportPipeline
+ *     - private importers: Map<string, UserImporter>
+ *     - register(importer): void
+ *     - run(sourceType, raw): ImportedUser[]
+ *       - throws Error("Importer not found: <sourceType>") if missing
+ *       - delegates to the selected importer
+ *     - runMany(jobs: Array<{ sourceType: string; raw: string }>): ImportedUser[]
+ *
+ * TASK
+ * ----
+ * Implement the importers and pipeline.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 08
+ * ------------------------------------------------------------------
+
+const importPipeline = new UserImportPipeline();
+importPipeline.register(new CsvUserImporter());
+importPipeline.register(new JsonUserImporter());
+importPipeline.register(new ApiUserImporter());
+
+const csvUsers = importPipeline.run("csv", "U1,a@example.com,Alice\nU2,b@example.com,Bob");
+console.log(csvUsers.length); // 2
+
+const jsonUsers = importPipeline.run("json", JSON.stringify([
+  { id: "U3", email: "c@example.com", name: "Chloe" }
+]));
+console.log(jsonUsers[0].name); // "Chloe"
+
+const allImported = importPipeline.runMany([
+  { sourceType: "csv", raw: "U4,d@example.com,Dan" },
+  { sourceType: "api", raw: JSON.stringify({ data: [{ id: "U5", email: "e@example.com", name: "Eva" }] }) },
+]);
+console.log(allImported.map(u => u.id)); // ["U4", "U5"]
+
+*/
+
+// =============================================================================
+// EXERCISE 09 - SOLID Permission System
+// Domain: Admin Platform - Authorization
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * An admin dashboard needs authorization rules. New rules must be added without
+ * editing the authorization service.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Define:
+ *
+ *   type AdminAction = "read" | "create" | "refund" | "delete" | "ban"
+ *
+ *   type AdminContext = {
+ *     userId: string;
+ *     roles: string[];
+ *     permissions: string[];
+ *     resourceOwnerId?: string;
+ *   }
+ *
+ *   interface AuthorizationRule
+ *     - can(action: AdminAction, context: AdminContext): boolean
+ *     - reason: string
+ *
+ * Implement:
+ *
+ *   RoleRule
+ *     - allows everything when roles includes "super_admin"
+ *
+ *   PermissionRule
+ *     - allows when permissions includes action
+ *
+ *   OwnershipRule
+ *     - allows "read" and "delete" only when context.userId === context.resourceOwnerId
+ *
+ *   AuthorizationService
+ *     - constructor(private readonly rules: AuthorizationRule[])
+ *     - authorize(action, context): { allowed: boolean; reason: string }
+ *       - allowed if at least one rule allows
+ *       - reason is the successful rule reason, or "No rule allowed this action"
+ *
+ * SOLID EXPECTATIONS
+ * ------------------
+ * - OCP: adding a new rule should not require editing AuthorizationService.
+ * - ISP: rules expose only the method the service needs.
+ * - DIP: service depends on AuthorizationRule, not concrete classes.
+ *
+ * TASK
+ * ----
+ * Implement the rule system.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 09
+ * ------------------------------------------------------------------
+
+const auth = new AuthorizationService([
+  new RoleRule(),
+  new PermissionRule(),
+  new OwnershipRule(),
+]);
+
+console.log(auth.authorize("ban", {
+  userId: "A1",
+  roles: ["super_admin"],
+  permissions: [],
+}).allowed); // true
+
+console.log(auth.authorize("refund", {
+  userId: "A2",
+  roles: ["agent"],
+  permissions: ["refund"],
+}).reason); // "Permission allowed"
+
+console.log(auth.authorize("delete", {
+  userId: "U1",
+  roles: ["user"],
+  permissions: [],
+  resourceOwnerId: "U1",
+}).allowed); // true
+
+*/
+
+// =============================================================================
+// EXERCISE 10 - Full Billing Engine
+// Domain: SaaS - Subscription Billing
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * CloudDesk needs a subscription billing engine. This exercise combines
+ * abstract classes, static factories, inheritance, polymorphism, dependency
+ * inversion, and SOLID.
+ *
+ * REQUIREMENTS
+ * ------------
+ * TYPES
+ *   type BillingCycle = "monthly" | "yearly"
+ *   type SubscriptionStatus = "trial" | "active" | "past_due" | "cancelled"
+ *
+ * INTERFACES
+ *   interface PaymentGateway
+ *     - charge(customerId: string, amount: number): Promise<string>
+ *
+ *   interface InvoiceStore
+ *     - save(invoice: Invoice): void
+ *     - findByCustomer(customerId: string): Invoice[]
+ *
+ * ABSTRACT CLASSES
+ *   abstract class SubscriptionPlan
+ *     - static readonly yearlyDiscountRate = 0.15
+ *     - constructor(code: string, name: string, monthlyPrice: number)
+ *     - getPrice(cycle: BillingCycle): number
+ *       - monthly returns monthlyPrice
+ *       - yearly returns monthlyPrice * 12 * (1 - yearlyDiscountRate)
+ *     - abstract getFeatures(): string[]
+ *
+ * CONCRETE PLANS
+ *   StarterPlan extends SubscriptionPlan
+ *     - features: ["1 user", "basic support"]
+ *
+ *   ProPlan extends SubscriptionPlan
+ *     - features: ["10 users", "priority support", "analytics"]
+ *
+ *   EnterprisePlan extends SubscriptionPlan
+ *     - extra: dedicatedManager: string
+ *     - features include dedicated manager
+ *
+ * OTHER CLASSES
+ *   Invoice
+ *     - static create(customerId, plan, cycle): Invoice
+ *     - invoiceId = "INV-" + auto incremented number
+ *     - amount = plan.getPrice(cycle)
+ *     - paid = false by default
+ *     - markPaid(paymentReference: string): void
+ *
+ *   Subscription
+ *     - customerId, plan, cycle, status
+ *     - changePlan(plan): void
+ *     - cancel(): void
+ *     - activate(): void
+ *
+ *   BillingService
+ *     - constructor(gateway: PaymentGateway, invoiceStore: InvoiceStore)
+ *     - bill(subscription): Promise<Invoice>
+ *       - creates invoice
+ *       - charges customer
+ *       - marks invoice paid
+ *       - saves invoice
+ *       - activates subscription
+ *       - if charge fails, status becomes "past_due"
+ *
+ *   FakePaymentGateway
+ *     - constructor(shouldFail = false)
+ *     - charge returns "PAY-<customerId>-<amount>" or throws Error("Payment failed")
+ *
+ *   InMemoryInvoiceStore
+ *     - stores invoices in memory
+ *
+ * TASK
+ * ----
+ * Implement the full billing engine.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 10
+ * ------------------------------------------------------------------
+
+async function runBilling() {
+  const store = new InMemoryInvoiceStore();
+  const billing = new BillingService(new FakePaymentGateway(), store);
+
+  const plan = new ProPlan("pro", "Pro", 49);
+  const subscription = new Subscription("CUST-1", plan, "yearly", "trial");
+
+  const invoice = await billing.bill(subscription);
+
+  console.log(invoice.invoiceId); // "INV-1"
+  console.log(invoice.paid);      // true
+  console.log(subscription.status); // "active"
+  console.log(store.findByCustomer("CUST-1").length); // 1
+
+  const failingBilling = new BillingService(new FakePaymentGateway(true), store);
+  const failedSubscription = new Subscription("CUST-2", new StarterPlan("starter", "Starter", 19), "monthly", "trial");
+
+  try { await failingBilling.bill(failedSubscription); }
+  catch (e) { console.log((e as Error).message); }
+  // "Payment failed"
+
+  console.log(failedSubscription.status); // "past_due"
+}
+
+runBilling();
+
+*/
+
+// =============================================================================
+// MEGA PROBLEM - CityRide Fleet Dispatch Platform
+// Covers ALL Chapter 3 Part 2 topics
+// =============================================================================
+/**
+ * ============================================================================
+ * CONTEXT - CityRide: Electric Taxi Fleet Dispatch
+ * ============================================================================
+ *
+ * CityRide operates electric taxis across a large city. The platform must manage
+ * vehicles, drivers, ride requests, pricing, dispatch, payment, notifications,
+ * and reporting.
+ *
+ * The goal is to design a flexible OOP system where:
+ * - shared behavior lives in abstract classes
+ * - static factories generate stable ids and default objects
+ * - vehicle, pricing, and notification behavior is polymorphic
+ * - business services depend on interfaces, not concrete infrastructure
+ * - SOLID principles are visible in the class design
+ *
+ * ============================================================================
+ * WHAT TO BUILD
+ * ============================================================================
+ *
+ * SECTION A - Core Types
+ * ----------------------
+ *   type VehicleStatus = "available" | "assigned" | "charging" | "maintenance"
+ *   type RideStatus = "requested" | "assigned" | "in_progress" | "completed" | "cancelled"
+ *
+ *   type GeoPoint = {
+ *     lat: number;
+ *     lng: number;
+ *   }
+ *
+ *   type RideRequest = {
+ *     requestId: string;
+ *     passengerId: string;
+ *     pickup: GeoPoint;
+ *     dropoff: GeoPoint;
+ *     requestedAt: Date;
+ *   }
+ *
+ * SECTION B - Static Utilities
+ * ----------------------------
+ *   class CityRideIdFactory
+ *     - private static counters for vehicles, drivers, rides, and receipts
+ *     - static nextVehicleId(): string -> "VEH-0001"
+ *     - static nextDriverId(): string -> "DRV-0001"
+ *     - static nextRideId(): string -> "RIDE-0001"
+ *     - static nextReceiptId(): string -> "RCT-0001"
+ *     - static resetForTests(): void
+ *
+ * SECTION C - Abstract Vehicle Model
+ * ----------------------------------
+ *   abstract class Vehicle
+ *     - vehicleId: string
+ *     - plateNumber: string
+ *     - status: VehicleStatus starts "available"
+ *     - batteryLevel: number, between 0 and 100
+ *     - constructor(plateNumber: string, batteryLevel: number)
+ *     - assign(): void
+ *       throws Error("Vehicle is not available") unless status is "available"
+ *     - release(): void sets status back to "available"
+ *     - sendToCharge(): void sets status to "charging"
+ *     - sendToMaintenance(): void sets status to "maintenance"
+ *     - canAcceptRide(distanceKm: number): boolean
+ *       false when not available, false when battery is too low
+ *     - protected abstract getBatteryUsagePerKm(): number
+ *     - abstract getCapacity(): number
+ *
+ *   class StandardCar extends Vehicle
+ *     - battery usage: 1.5 per km
+ *     - capacity: 4
+ *
+ *   class Van extends Vehicle
+ *     - battery usage: 2.2 per km
+ *     - capacity: 7
+ *
+ *   class LuxuryCar extends Vehicle
+ *     - battery usage: 1.8 per km
+ *     - capacity: 3
+ *     - extra property: amenities: string[]
+ *
+ * SECTION D - Drivers and Pricing Polymorphism
+ * --------------------------------------------
+ *   class Driver
+ *     - driverId: string
+ *     - fullName: string
+ *     - rating: number
+ *     - assignedVehicle: Vehicle | null
+ *     - assignVehicle(vehicle: Vehicle): void
+ *     - unassignVehicle(): void
+ *
+ *   interface PricingStrategy
+ *     - name: string
+ *     - calculate(distanceKm: number, durationMinutes: number): number
+ *
+ *   Implement:
+ *     - StandardPricing: 2.5 + distanceKm * 1.4 + durationMinutes * 0.2
+ *     - SurgePricing: constructor(multiplier: number), applies multiplier to standard price
+ *     - LuxuryPricing: 8 + distanceKm * 2.8 + durationMinutes * 0.4
+ *
+ * SECTION E - Ride Entity
+ * -----------------------
+ *   class Ride
+ *     - rideId: string
+ *     - request: RideRequest
+ *     - driver: Driver | null
+ *     - vehicle: Vehicle | null
+ *     - status: RideStatus starts "requested"
+ *     - distanceKm: number
+ *     - durationMinutes: number
+ *     - price: number starts 0
+ *     - assign(driver: Driver, vehicle: Vehicle): void
+ *       vehicle must accept the ride distance
+ *       driver receives the vehicle
+ *       vehicle status becomes "assigned"
+ *       ride status becomes "assigned"
+ *     - start(): void only from "assigned"
+ *     - complete(pricing: PricingStrategy): number only from "in_progress"
+ *       calculates price, releases vehicle, unassigns driver, status becomes "completed"
+ *     - cancel(reason: string): void
+ *       cannot cancel a completed ride
+ *
+ * SECTION F - Infrastructure Interfaces
+ * -------------------------------------
+ *   interface RideRepository
+ *     - save(ride: Ride): void
+ *     - findById(id: string): Ride | undefined
+ *     - findByPassenger(passengerId: string): Ride[]
+ *     - findCompleted(): Ride[]
+ *
+ *   interface PaymentGateway
+ *     - charge(passengerId: string, amount: number): Promise<string>
+ *
+ *   interface NotificationSender
+ *     - send(userId: string, message: string): Promise<void>
+ *
+ *   Implement in-memory or fake versions:
+ *     - InMemoryRideRepository
+ *     - FakePaymentGateway, constructor(shouldFail = false)
+ *     - ConsoleNotificationSender
+ *
+ * SECTION G - Dispatch Service
+ * ----------------------------
+ *   class DispatchService
+ *     - constructor(repository, paymentGateway, notificationSender, pricingStrategy)
+ *     - private vehicles: Vehicle[]
+ *     - private drivers: Driver[]
+ *     - registerVehicle(vehicle): void
+ *     - registerDriver(driver): void
+ *     - requestRide(request, distanceKm, durationMinutes): Ride
+ *       creates and saves a ride
+ *     - dispatch(rideId): Promise<Ride>
+ *       finds first available driver and first vehicle that can accept distance
+ *       assigns ride
+ *       sends notification to passenger
+ *       saves ride
+ *     - completeRide(rideId): Promise<string>
+ *       starts ride if needed
+ *       completes ride with pricing strategy
+ *       charges passenger
+ *       sends receipt notification
+ *       saves ride
+ *       returns payment reference
+ *
+ * SECTION H - Reporting
+ * ---------------------
+ *   class FleetReportService
+ *     - constructor(repository: RideRepository)
+ *     - getTotalRevenue(): number
+ *     - getPassengerRideCount(passengerId: string): number
+ *     - getCompletedRideSummary(): string[]
+ *       each line: "<rideId> - <passengerId> - EUR <price>"
+ *
+ * SECTION I - SOLID CHECK
+ * -----------------------
+ * Your final design should demonstrate:
+ *   - SRP: vehicles, pricing, rides, dispatch, payment, notifications, and reports are separate.
+ *   - OCP: new vehicle types and pricing strategies do not require editing DispatchService.
+ *   - LSP: every Vehicle subclass works anywhere a Vehicle is expected.
+ *   - ISP: infrastructure interfaces are small and focused.
+ *   - DIP: DispatchService depends on interfaces for repository, payment, and notification.
+ *
+ * TASK
+ * ----
+ * Implement CityRide from sections A through I.
+ */
+
+// -> Write your CityRide implementation here
+
+/* ------------------------------------------------------------------
+ * FULL TEST SCENARIO - MEGA PROBLEM
+ * ------------------------------------------------------------------
+
+async function runCityRide() {
+  CityRideIdFactory.resetForTests();
+
+  const repository = new InMemoryRideRepository();
+  const paymentGateway = new FakePaymentGateway();
+  const notifier = new ConsoleNotificationSender();
+
+  const dispatch = new DispatchService(
+    repository,
+    paymentGateway,
+    notifier,
+    new StandardPricing()
+  );
+
+  const car = new StandardCar("AB-123-CD", 90);
+  const van = new Van("VAN-777-ZZ", 80);
+  const driver = new Driver("Alice Martin", 4.8);
+  const secondDriver = new Driver("Bob Chen", 4.6);
+
+  dispatch.registerVehicle(car);
+  dispatch.registerVehicle(van);
+  dispatch.registerDriver(driver);
+  dispatch.registerDriver(secondDriver);
+
+  const request: RideRequest = {
+    requestId: "REQ-1",
+    passengerId: "PASS-1",
+    pickup: { lat: 48.8566, lng: 2.3522 },
+    dropoff: { lat: 48.8738, lng: 2.295 },
+    requestedAt: new Date(),
+  };
+
+  const ride = dispatch.requestRide(request, 8, 22);
+  console.log(ride.status); // "requested"
+
+  await dispatch.dispatch(ride.rideId);
+  console.log(ride.status); // "assigned"
+  console.log(car.status);  // "assigned"
+
+  const paymentReference = await dispatch.completeRide(ride.rideId);
+  console.log(paymentReference); // "PAY-PASS-1-<amount>"
+  console.log(ride.status);      // "completed"
+  console.log(car.status);       // "available"
+  console.log(ride.price);        // standard price for 8km and 22 minutes
+
+  const report = new FleetReportService(repository);
+  console.log(report.getTotalRevenue()); // same as ride.price
+  console.log(report.getPassengerRideCount("PASS-1")); // 1
+  console.log(report.getCompletedRideSummary());
+  // ["RIDE-0001 - PASS-1 - EUR <price>"]
+
+  const luxuryDispatch = new DispatchService(
+    repository,
+    paymentGateway,
+    notifier,
+    new LuxuryPricing()
+  );
+
+  const luxuryCar = new LuxuryCar("LUX-001-AA", 100, ["water", "wifi", "quiet mode"]);
+  const luxuryDriver = new Driver("Chloe Driver", 4.95);
+  luxuryDispatch.registerVehicle(luxuryCar);
+  luxuryDispatch.registerDriver(luxuryDriver);
+
+  const luxuryRide = luxuryDispatch.requestRide(
+    { ...request, requestId: "REQ-2", passengerId: "PASS-2" },
+    12,
+    30
+  );
+
+  await luxuryDispatch.dispatch(luxuryRide.rideId);
+  await luxuryDispatch.completeRide(luxuryRide.rideId);
+  console.log(luxuryRide.price); // luxury pricing
+
+  const failingDispatch = new DispatchService(
+    repository,
+    new FakePaymentGateway(true),
+    notifier,
+    new SurgePricing(2)
+  );
+
+  failingDispatch.registerVehicle(new StandardCar("FAIL-001", 100));
+  failingDispatch.registerDriver(new Driver("Failed Payment Driver", 4.2));
+
+  const failedRide = failingDispatch.requestRide(
+    { ...request, requestId: "REQ-3", passengerId: "PASS-3" },
+    4,
+    10
+  );
+
+  await failingDispatch.dispatch(failedRide.rideId);
+
+  try { await failingDispatch.completeRide(failedRide.rideId); }
+  catch (e) { console.log((e as Error).message); }
+  // "Payment failed"
+}
+
+runCityRide();
+
+*/
