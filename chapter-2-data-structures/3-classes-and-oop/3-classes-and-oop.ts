@@ -424,7 +424,10 @@ class BaseSeller {
   }
 
   getInventoryValue(): number {
-    return this.products.reduce((acc, curr) => acc + curr.finalPrice * curr.stock, 0);
+    return this.products.reduce(
+      (acc, curr) => acc + curr.finalPrice * curr.stock,
+      0,
+    );
     /** let total = 0;
 
     for (const product of this.products) {
@@ -596,14 +599,19 @@ class Stock implements ITradeable {
   public priceHistory: number[];
   public companyName: string;
 
-  constructor(symbol: string, currentPrice: number, quantity: number, companyName: string) {
+  constructor(
+    symbol: string,
+    currentPrice: number,
+    quantity: number,
+    companyName: string,
+  ) {
     this.symbol = symbol;
     this.currentPrice = currentPrice;
     this.quantity = quantity;
     this.priceHistory = [];
     this.companyName = companyName;
   }
-  
+
   buy(quantity: number): void {
     this.quantity += quantity;
     this.priceHistory.push(this.currentPrice);
@@ -625,7 +633,7 @@ class Stock implements ITradeable {
   getValue(): number {
     return this.currentPrice * this.quantity;
   }
-  
+
   getSummary(): string {
     return `${this.symbol} (${this.companyName}) — qty: ${this.quantity} @ €${this.currentPrice} = €${this.getValue()}`;
   }
@@ -638,15 +646,20 @@ class Bond implements IAsset {
   public couponRate: number;
   public maturityDate: Date;
 
-
-  constructor(symbol: string, currentPrice: number, faceValue: number, couponRate: number, maturityDate: Date) {
+  constructor(
+    symbol: string,
+    currentPrice: number,
+    faceValue: number,
+    couponRate: number,
+    maturityDate: Date,
+  ) {
     this.symbol = symbol;
     this.currentPrice = currentPrice;
     this.faceValue = faceValue;
     this.couponRate = couponRate;
     this.maturityDate = maturityDate;
   }
-  
+
   getValue(): number {
     return this.faceValue;
   }
@@ -662,7 +675,7 @@ class Portfolio {
   constructor() {
     this.assets = new Map();
   }
-// ?
+  // ?
   addAsset(asset: IAsset): void {
     this.assets.set(asset.symbol, asset);
   }
@@ -670,7 +683,7 @@ class Portfolio {
   removeAsset(symbol: string): boolean {
     return this.assets.delete(symbol);
   }
-  
+
   // ?
   getTotalValue(): number {
     let total = 0;
@@ -690,7 +703,6 @@ class Portfolio {
     }
   }
 }
-
 
 /* ------------------------------------------------------------------
  * TEST SCENARIO — Exercise 05
@@ -777,13 +789,11 @@ interface IQuestion {
 
 type QuizAnswerResult = "correct" | "wrong" | "already answered" | "not found";
 
-
 class Question implements IQuestion {
   public id: number;
   public prompt: string;
   public correctAnswer: string;
   private wrongAttempts: number;
-
 
   constructor(id: number, prompt: string, correctAnswer: string) {
     this.id = id;
@@ -791,13 +801,17 @@ class Question implements IQuestion {
     this.correctAnswer = correctAnswer;
     this.wrongAttempts = 0;
   }
-  
+
   check(answer: string): boolean {
     return answer.toLowerCase() === this.correctAnswer.toLowerCase();
   }
 
   get difficulty(): QuestionDifficulty {
-    return this.wrongAttempts === 0 ? "easy" : this.wrongAttempts === 1 ? "medium" : "hard";
+    return this.wrongAttempts === 0
+      ? "easy"
+      : this.wrongAttempts === 1
+        ? "medium"
+        : "hard";
   }
 }
 
@@ -948,6 +962,7 @@ console.log(session.getReport());
  */
 
 // → Write your implementation here
+type OrderItem = { product: Product; quantity: number; unitPrice: number };
 
 /* ------------------------------------------------------------------
  * TEST SCENARIO — Exercise 07
@@ -1418,6 +1433,321 @@ console.log(house.getFullLog().length); // all events from all auctions
 
 // → Write your NexusHub implementation here
 
+type Role = "buyer" | "seller" | "learner" | "admin";
+
+interface IIdentifiable {
+  id: string;
+  createdAt: Date;
+}
+
+interface IRoleHolder {
+  roles: Set<Role>;
+  hasRole(role: Role): boolean;
+  addRole(role: Role): void;
+}
+
+class User implements IIdentifiable, IRoleHolder {
+  public id: string;
+  public email: string;
+  public displayName: string;
+  public createdAt: Date;
+  public roles: Set<Role>;
+
+  constructor(id: string, email: string, displayName: string) {
+    this.id = id;
+    this.email = email;
+    this.displayName = displayName;
+    this.createdAt = new Date();
+    this.roles = new Set();
+  }
+
+  hasRole(role: Role): boolean {
+    return this.roles.has(role);
+  }
+
+  addRole(role: Role): void {
+    this.roles.add(role);
+  }
+
+  getProfile(): string {
+    return `${this.displayName} (${this.email}) [${Array.from(this.roles).join(",")}]`;
+  }
+}
+
+class AdminUser extends User {
+  public permissions: Set<string>;
+
+  constructor(id: string, email: string, displayName: string) {
+    super(id, email, displayName);
+    this.permissions = new Set();
+    this.addRole("admin");
+  }
+
+  addPermission(permission: string): void {
+    this.permissions.add(permission);
+  }
+
+  hasPermission(permission: string): boolean {
+    return this.permissions.has(permission);
+  }
+}
+
+type TransactionType = "credit" | "debit" | "refund" | "fee";
+
+type WalletTransaction = {
+  txId: string;
+  type: TransactionType;
+  amount: number;
+  description: string;
+  timestamp: Date;
+};
+
+interface IWallet {
+  owner: User;
+  readonly balance: number;
+  credit(amount: number, description: string): WalletTransaction;
+  debit(amount: number, description: string): WalletTransaction;
+  getTransactions(): WalletTransaction[];
+  getTransactionsByType(type: TransactionType): WalletTransaction[];
+}
+
+class Wallet implements IWallet {
+  public owner: User;
+  public balance: number;
+  protected transactions: WalletTransaction[];
+
+  constructor(owner: User) {
+    this.owner = owner;
+    this.balance = 0;
+    this.transactions = [];
+  }
+
+  credit(amount: number, description: string): WalletTransaction {
+    if (amount <= 0) {
+      throw new Error("Amount must be positive");
+    }
+
+    const transaction: WalletTransaction = {
+      txId: this.generateTxId(),
+      type: "credit",
+      amount,
+      description,
+      timestamp: new Date(),
+    };
+
+    this.balance += amount;
+    this.transactions.push(transaction);
+    return transaction;
+  }
+
+  debit(amount: number, description: string): WalletTransaction {
+    if (amount <= 0) {
+      throw new Error("Amount must be positive");
+    }
+    if (this.balance < amount) {
+      throw new Error("Insufficient funds");
+    }
+    const transaction: WalletTransaction = {
+      txId: this.generateTxId(),
+      type: "debit",
+      amount,
+      description,
+      timestamp: new Date(),
+    };
+    this.balance -= amount;
+    this.transactions.push(transaction);
+    return transaction;
+  }
+
+  getTransactions(): WalletTransaction[] {
+    return [...this.transactions];
+  }
+
+  getTransactionsByType(type: TransactionType): WalletTransaction[] {
+    return this.transactions.filter((t) => t.type === type);
+  }
+
+  generateTxId(): string {
+    return `TX-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  }
+}
+
+class PremiumWallet extends Wallet {
+  public cashbackRate: number;
+
+  constructor(owner: User, cashbackRate: number) {
+    super(owner);
+    this.cashbackRate = cashbackRate;
+  }
+
+  override credit(amount: number, description: string): WalletTransaction {
+    const mainTransaction = super.credit(amount, description);
+    const cashback = amount * this.cashbackRate;
+
+    if (cashback > 0) {
+      super.credit(cashback, `Cashback: ${cashback}`);
+    }
+
+    return mainTransaction;
+  }
+
+  getCashbackEarned(): number {
+    return this.getTransactionsByType("credit").reduce(
+      (acc, curr) => acc + curr.amount,
+      0,
+    );
+  }
+}
+
+// when a class extendes a class - always all props in constructor?
+// not sure what else to implement here
+class NexusSeller extends VerifiedSeller {
+  public wallet: Wallet;
+
+  constructor(
+    sellerId: string,
+    storeName: string,
+    commissionRate: number,
+    verifiedSince: Date,
+    wallet: Wallet,
+  ) {
+    super(sellerId, storeName, commissionRate, verifiedSince);
+    this.wallet = wallet;
+  }
+}
+
+type NexusOrderStatus =
+  | "cart"
+  | "pending_payment"
+  | "paid"
+  | "shipped"
+  | "delivered"
+  | "refunded";
+
+class NexusOrder {
+  public orderId: string;
+  public buyer: User;
+  public items: OrderItem[];
+  public status: NexusOrderStatus;
+  public createdAt: Date;
+
+  constructor(orderId: string, buyer: User) {
+    this.orderId = orderId;
+    this.buyer = buyer;
+    this.items = [];
+    this.status = "cart";
+    this.createdAt = new Date();
+  }
+
+  addItem(product: Product, quantity: number): void {
+    this.items.push({ product, quantity, unitPrice: product.finalPrice });
+  }
+
+  checkout(wallet: Wallet): boolean {
+    if (this.status !== "cart") {
+      return false;
+    }
+    if (this.items.length === 0) {
+      return false;
+    }
+    this.status = "pending_payment";
+    const total = this.items.reduce(
+      (acc, curr) => acc + curr.unitPrice * curr.quantity,
+      0,
+    );
+
+    if (total <= 0) {
+      return false;
+    }
+
+    try {
+      wallet.debit(total, "Order checkout");
+    } catch (error) {
+      return false;
+    }
+
+    this.status = "paid";
+    return true;
+  }
+
+  refund(wallet: Wallet): boolean {
+    if (this.status !== "paid" && this.status !== "shipped") {
+      return false;
+    }
+    const total = this.items.reduce(
+      (acc, curr) => acc + curr.unitPrice * curr.quantity,
+      0,
+    );
+
+    try {
+      wallet.credit(total, "Order refund");
+    } catch (error) {
+      return false;
+    }
+
+    this.status = "refunded";
+    return true;
+  }
+
+  getReceipt(): string {
+    const itemLines = this.items
+      .map(
+        (item) =>
+          `  ${item.product.name} x${item.quantity} @ ${item.unitPrice} = ${item.unitPrice * item.quantity}`,
+      )
+      .join("\n");
+
+    const total = this.items.reduce(
+      (acc, curr) => acc + curr.unitPrice * curr.quantity,
+      0,
+    );
+
+    return [
+      `Order ID: ${this.orderId}`,
+      `Buyer: ${this.buyer.displayName}`,
+      `Status: ${this.status}`,
+      `Created: ${this.createdAt.toISOString()}`,
+      "",
+      "Items:",
+      itemLines,
+      "",
+      `Total: ${total}`,
+    ].join("\n");
+  }
+}
+
+// Reuse Course from Ex 02.
+interface ICertifiable {
+  issue(user: User, course: Course): Certificate;
+  validate(certId: string): boolean;
+}
+
+// *
+// *   interface ICertifiable
+// *     - issue(user: User, course: Course): Certificate
+// *     - validate(certId: string): boolean
+// *
+// *   class Certificate
+// *     - certId: string, issuedTo: User, course: Course, issuedAt: Date, expiresAt: Date (1 year)
+// *     - isValid(): boolean  — not expired
+// *     - toString(): string  →  "CERT-<certId>: <displayName> completed <title> on <YYYY-MM-DD>"
+// *
+// *   class CertificationAuthority implements ICertifiable
+// *     - private certs: Map<string, Certificate>
+// *     - issue(user, course): Certificate  — certId = "CERT-<uuid-like>"
+// *     - validate(certId): boolean
+// *     - getCertsByUser(userId: string): Certificate[]
+// *
+// *   class NexusCourse extends Course
+// *     - price: number (courses are paid on NexusHub)
+// *     - instructor: NexusSeller
+// *     - private completedStudents: Set<string>  (user ids)
+// *     - purchase(user: User, wallet: Wallet): boolean
+// *       · Debits wallet by course.price
+// *       · Enrolls user in course
+// *       · Credits instructor's wallet (minus 10% platform fee)
+// *     - markComplete(userId: string): void
+// *     - isCompleted(userId: string): boolean
 /* ------------------------------------------------------------------
  * FULL TEST SCENARIO — NexusHub Mega Problem
  * ------------------------------------------------------------------
