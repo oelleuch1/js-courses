@@ -1,76 +1,233 @@
+// =============================================================================
+// CHAPTER 4 | TypeScript Generics Exercises
+// Topics: generic functions, constraints, keyof, indexed access types,
+//         generic interfaces, generic classes, utility types, discriminated
+//         unions, repositories, caches, event systems, and reusable domain models.
+// =============================================================================
+
+// =============================================================================
+// GREEN EXERCISE 01 - FILL IN THE BLANKS
+// Domain: Marketplace - Product Response Envelope
+// Difficulty: Easy
+// =============================================================================
 /**
- * Practice Set: TypeScript Generics
- * Complete TODOs with type-safe implementations.
- * - 10 feature-driven exercises
- * - 2 larger design problems
+ * CONTEXT
+ * -------
+ * You are building the catalog API for "ShopHub", an online marketplace.
+ * Different endpoints return different payloads:
+ *
+ *   - one endpoint returns a Product
+ *   - another endpoint returns a Seller
+ *   - another endpoint returns an array of search results
+ *
+ * The API team wants one reusable response wrapper that keeps the exact type
+ * of the payload.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Create:
+ *
+ *   type ApiSuccess<TData>
+ *     - ok: true
+ *     - data: TData
+ *     - receivedAtMs: number
+ *
+ * Implement:
+ *
+ *   buildSuccessResponse<TData>(data, receivedAtMs = Date.now())
+ *     - returns an ApiSuccess<TData>
+ *     - must not use any
+ *
+ * INSTRUCTIONS
+ * ------------
+ * Complete the TODOs. Do NOT change the public API.
  */
 
-/**
- * EXERCISE 1
- * API client: wrap a payload in a typed success envelope.
- * Return shape:
- * { ok: true, data, receivedAtMs }
- */
-export function buildSuccessResponse<T>(data: T, receivedAtMs: number = Date.now()): {
+export type ApiSuccess<TData> = {
   ok: true;
-  data: T;
+  data: TData;
   receivedAtMs: number;
-} {
+};
+
+export function buildSuccessResponse<TData>(
+  data: TData,
+  receivedAtMs: number = Date.now()
+): ApiSuccess<TData> {
   // TODO
   throw new Error("TODO");
 }
 
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 01
+ * ------------------------------------------------------------------
+
+type MarketplaceProduct = {
+  id: string;
+  name: string;
+  price: number;
+};
+
+const response = buildSuccessResponse<MarketplaceProduct>(
+  { id: "P-1", name: "Mechanical Keyboard", price: 129 },
+  1000
+);
+
+console.log(response.ok); // true
+console.log(response.data.name); // "Mechanical Keyboard"
+console.log(response.receivedAtMs); // 1000
+
+*/
+
+// =============================================================================
+// GREEN EXERCISE 02 - FILL IN THE BLANKS
+// Domain: Finance - Portfolio Pair Builder
+// Difficulty: Easy
+// =============================================================================
 /**
- * EXERCISE 2
- * Search feature: return paginated results for any item type.
- * Input: items, page, pageSize
- * Output:
- * {
- *   page: number;
- *   pageSize: number;
- *   total: number;
- *   items: T[];
- * }
+ * CONTEXT
+ * -------
+ * "WealthBoard" stores portfolio values using typed key/value pairs.
+ *
+ * Examples:
+ *   - stock symbol -> current price
+ *   - account id -> balance
+ *   - asset id -> risk score
+ *
+ * REQUIREMENTS
+ * ------------
+ * Implement:
+ *
+ *   createPair<TKey, TValue>(key, value)
+ *     - returns a tuple [TKey, TValue]
+ *
+ *   createLookup<TKey, TValue>(entries)
+ *     - accepts Array<[TKey, TValue]>
+ *     - returns Map<TKey, TValue>
+ *
+ * INSTRUCTIONS
+ * ------------
+ * Complete the TODOs. Do NOT change the public API.
  */
-export function paginateResults<T>(
-  items: T[],
-  page: number,
-  pageSize: number
-): { page: number; pageSize: number; total: number; items: T[] } {
+
+export function createPair<TKey, TValue>(
+  key: TKey,
+  value: TValue
+): [TKey, TValue] {
   // TODO
   throw new Error("TODO");
 }
 
-/**
- * EXERCISE 3
- * Audit logging: attach metadata to any domain event payload.
- * Return:
- * {
- *   type: string;
- *   payload: TPayload;
- *   actorId: string;
- *   atMs: number;
- * }
- */
-export function createAuditEvent<TPayload>(
-  type: string,
-  payload: TPayload,
-  actorId: string,
-  atMs: number = Date.now()
-): { type: string; payload: TPayload; actorId: string; atMs: number } {
+export function createLookup<TKey, TValue>(
+  entries: Array<[TKey, TValue]>
+): Map<TKey, TValue> {
   // TODO
   throw new Error("TODO");
 }
 
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 02
+ * ------------------------------------------------------------------
+
+const priceEntry = createPair("AAPL", 189.5);
+console.log(priceEntry[0]); // "AAPL"
+console.log(priceEntry[1]); // 189.5
+
+const prices = createLookup([
+  ["AAPL", 189.5],
+  ["MSFT", 420.1],
+]);
+
+console.log(prices.get("MSFT")); // 420.1
+
+*/
+
+// =============================================================================
+// GREEN EXERCISE 03
+// Domain: Analytics - Paginated Dashboard Results
+// Difficulty: Easy
+// =============================================================================
 /**
- * EXERCISE 4
- * Feature flags: merge default config with tenant overrides.
- * Constraints:
- * - overrides is Partial<TConfig>
- * - return fully merged TConfig
- * - do not mutate defaults input
+ * CONTEXT
+ * -------
+ * "MetricFlow" displays many kinds of dashboard records:
+ *
+ *   - revenue rows
+ *   - active user rows
+ *   - error logs
+ *   - conversion events
+ *
+ * The pagination logic is identical for every record type.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Define:
+ *
+ *   type Page<TItem>
+ *     - page: number
+ *     - pageSize: number
+ *     - total: number
+ *     - items: TItem[]
+ *
+ * Implement:
+ *
+ *   paginate<TItem>(items, page, pageSize): Page<TItem>
+ *     - page numbers start at 1
+ *     - page less than 1 should behave like page 1
+ *     - pageSize less than 1 should behave like pageSize 1
+ *     - must return the selected slice
+ *     - must not mutate input
+ *
+ * TASK
+ * ----
+ * Implement the type and function from scratch.
  */
-export function mergeFeatureConfig<TConfig extends Record<string, unknown>>(
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 03
+ * ------------------------------------------------------------------
+
+const dashboardRows = [
+  { day: "Monday", revenue: 1200 },
+  { day: "Tuesday", revenue: 900 },
+  { day: "Wednesday", revenue: 1500 },
+];
+
+const firstPage = paginate(dashboardRows, 1, 2);
+console.log(firstPage.items.length); // 2
+console.log(firstPage.total); // 3
+console.log(firstPage.items[0].revenue); // 1200
+
+*/
+
+// =============================================================================
+// YELLOW EXERCISE 04 - FILL IN THE BLANKS
+// Domain: SaaS - Tenant Feature Configuration
+// Difficulty: Medium
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * "CloudDesk" supports tenant-specific feature configuration.
+ * A tenant can override some settings, but not all settings.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Implement:
+ *
+ *   mergeTenantConfig<TConfig extends Record<string, unknown>>(defaults, overrides)
+ *     - defaults is a complete TConfig
+ *     - overrides is Partial<TConfig>
+ *     - returns a complete TConfig
+ *     - does not mutate defaults
+ *
+ * INSTRUCTIONS
+ * ------------
+ * Complete the TODO. Do NOT change the public API.
+ */
+
+export function mergeTenantConfig<TConfig extends Record<string, unknown>>(
   defaults: TConfig,
   overrides: Partial<TConfig>
 ): TConfig {
@@ -78,261 +235,684 @@ export function mergeFeatureConfig<TConfig extends Record<string, unknown>>(
   throw new Error("TODO");
 }
 
-/**
- * EXERCISE 5
- * Catalog indexing: build a Map for fast lookup by id.
- * Constraint: item has `id: TId`.
- * If duplicates appear, latest item wins.
- */
-export function indexEntities<TId, TItem extends { id: TId }>(items: TItem[]): Map<TId, TItem> {
-  // TODO
-  throw new Error("TODO");
-}
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 04
+ * ------------------------------------------------------------------
 
-/**
- * EXERCISE 6
- * Profile update endpoint:
- * apply a patch to a stored profile entity.
- * Constraints:
- * - TProfile must have id: string
- * - id cannot be changed
- * - return updated profile (new object, immutable update)
- */
-export function applyProfilePatch<TProfile extends { id: string }>(
-  profile: TProfile,
-  patch: Partial<TProfile>
-): TProfile {
-  // TODO
-  throw new Error("TODO");
-}
+const config = mergeTenantConfig(
+  { analytics: true, seats: 10, region: "eu" },
+  { seats: 25 }
+);
 
+console.log(config.analytics); // true
+console.log(config.seats); // 25
+console.log(config.region); // "eu"
+
+*/
+
+// =============================================================================
+// YELLOW EXERCISE 05
+// Domain: Marketplace - Entity Indexing by Typed Id
+// Difficulty: Medium
+// =============================================================================
 /**
- * EXERCISE 7
- * Notification center queue:
- * create a generic queue class for jobs/events.
+ * CONTEXT
+ * -------
+ * ShopHub needs fast lookup maps for products, sellers, and orders.
+ * Some entities use string ids. Others use number ids.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Define:
+ *
+ *   interface EntityWithId<TId>
+ *     - id: TId
+ *
+ * Implement:
+ *
+ *   indexEntities<TId, TEntity extends EntityWithId<TId>>(items)
+ *     - returns Map<TId, TEntity>
+ *     - if duplicate ids appear, the latest item wins
+ *
+ * TASK
+ * ----
+ * Implement the interface and function.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 05
+ * ------------------------------------------------------------------
+
+const productIndex = indexEntities([
+  { id: "P-1", name: "Keyboard", price: 129 },
+  { id: "P-2", name: "Mouse", price: 59 },
+  { id: "P-1", name: "Keyboard Pro", price: 179 },
+]);
+
+console.log(productIndex.get("P-1")?.name); // "Keyboard Pro"
+
+const orderIndex = indexEntities([
+  { id: 1001, total: 300 },
+  { id: 1002, total: 450 },
+]);
+
+console.log(orderIndex.get(1002)?.total); // 450
+
+*/
+
+// =============================================================================
+// YELLOW EXERCISE 06
+// Domain: Healthcare - Safe Patient Field Reader
+// Difficulty: Medium
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * "CareBoard" displays patient summaries. Components need to read fields from
+ * different patient-related models without passing invalid field names.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Implement:
+ *
+ *   getField<TRecord, TKey extends keyof TRecord>(record, key)
+ *     - returns record[key]
+ *     - return type must be TRecord[TKey]
+ *
+ *   setField<TRecord, TKey extends keyof TRecord>(record, key, value)
+ *     - value must be TRecord[TKey]
+ *     - returns a new object
+ *     - does not mutate the input record
+ *
+ * TASK
+ * ----
+ * Implement both functions.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 06
+ * ------------------------------------------------------------------
+
+const patient = {
+  id: "PAT-1",
+  fullName: "Alice Martin",
+  age: 34,
+  insured: true,
+};
+
+const age = getField(patient, "age");
+console.log(age); // 34
+
+const updatedPatient = setField(patient, "insured", false);
+console.log(updatedPatient.insured); // false
+console.log(patient.insured); // true
+
+// setField(patient, "age", "old"); // should be a TypeScript error
+
+*/
+
+// =============================================================================
+// ORANGE EXERCISE 07
+// Domain: Logistics - Generic Priority Queue
+// Difficulty: Senior
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * "ShipFast" processes different kinds of operational jobs:
+ *
+ *   - package pickup jobs
+ *   - customs review jobs
+ *   - delivery retry jobs
+ *
+ * Every job type is different, but the queue behavior is reusable.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Implement:
+ *
+ *   class PriorityQueue<TItem>
+ *     - private items: Array<{ item: TItem; priority: number; queuedAtMs: number }>
+ *
  * Methods:
- * - enqueue(item: T): void
- * - dequeue(): T | undefined
- * - peek(): T | undefined
- * - size(): number
+ *   - enqueue(item: TItem, priority: number, queuedAtMs = Date.now()): void
+ *       higher priority should be processed first
+ *
+ *   - dequeue(): TItem | undefined
+ *       removes and returns the highest-priority item
+ *       if priorities tie, older queuedAtMs wins
+ *
+ *   - peek(): TItem | undefined
+ *       returns next item without removing it
+ *
+ *   - size(): number
+ *
+ *   - clear(): void
+ *
+ * TASK
+ * ----
+ * Implement the class.
  */
-export class NotificationQueue<T> {
-  private readonly data: T[] = [];
 
-  enqueue(item: T): void {
-    // TODO
-    throw new Error("TODO");
-  }
+// -> Write your implementation here
 
-  dequeue(): T | undefined {
-    // TODO
-    throw new Error("TODO");
-  }
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 07
+ * ------------------------------------------------------------------
 
-  peek(): T | undefined {
-    // TODO
-    throw new Error("TODO");
-  }
+type DeliveryJob = {
+  shipmentId: string;
+  address: string;
+};
 
-  size(): number {
-    // TODO
-    throw new Error("TODO");
-  }
-}
+const queue = new PriorityQueue<DeliveryJob>();
 
+queue.enqueue({ shipmentId: "S-1", address: "Paris" }, 1, 100);
+queue.enqueue({ shipmentId: "S-2", address: "Lyon" }, 5, 200);
+queue.enqueue({ shipmentId: "S-3", address: "Nice" }, 5, 150);
+
+console.log(queue.peek()?.shipmentId); // "S-3"
+console.log(queue.dequeue()?.shipmentId); // "S-3"
+console.log(queue.dequeue()?.shipmentId); // "S-2"
+console.log(queue.size()); // 1
+
+*/
+
+// =============================================================================
+// ORANGE EXERCISE 08
+// Domain: Content Platform - Generic Repository with Patches
+// Difficulty: Senior
+// =============================================================================
 /**
- * EXERCISE 8
- * Metrics dashboard:
- * group records by a typed key and return Map<key, T[]>.
- */
-export function groupForDashboard<T, K extends keyof T>(
-  items: T[],
-  key: K
-): Map<T[K], T[]> {
-  // TODO
-  throw new Error("TODO");
-}
-
-/**
- * EXERCISE 9
- * Permission engine:
- * create RolePermissionMatrix<TRole, TPermission> class backed by
- * Map<TRole, Set<TPermission>>.
+ * CONTEXT
+ * -------
+ * "CreatorHub" stores articles, videos, and newsletters. All content has an id,
+ * but each content type has different fields.
+ *
+ * REQUIREMENTS
+ * ------------
+ * Reuse or define:
+ *
+ *   interface HasId<TId>
+ *     - id: TId
+ *
+ * Implement:
+ *
+ *   class InMemoryRepository<TId, TEntity extends HasId<TId>>
+ *     - private records: Map<TId, TEntity>
+ *
  * Methods:
- * - grant(role, permission)
- * - revoke(role, permission)
- * - can(role, permission): boolean
+ *   - create(entity: TEntity): void
+ *       throws Error("Entity already exists: <id>") if id already exists
+ *
+ *   - update(id: TId, patch: Partial<TEntity>): TEntity
+ *       throws Error("Entity not found: <id>") if missing
+ *       must not allow id changes from patch
+ *       returns updated entity
+ *
+ *   - findById(id: TId): TEntity | undefined
+ *
+ *   - list(): TEntity[]
+ *
+ *   - remove(id: TId): boolean
+ *
+ * SAFETY EXPECTATION
+ * ------------------
+ * Return shallow copies from findById, list, and update so callers cannot mutate
+ * stored records by changing returned object references.
+ *
+ * TASK
+ * ----
+ * Implement the interface and class.
  */
-export class RolePermissionMatrix<TRole, TPermission> {
-  private readonly grants = new Map<TRole, Set<TPermission>>();
 
-  grant(role: TRole, permission: TPermission): void {
-    // TODO
-    throw new Error("TODO");
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 08
+ * ------------------------------------------------------------------
+
+type Article = {
+  id: string;
+  title: string;
+  status: "draft" | "published";
+};
+
+const articles = new InMemoryRepository<string, Article>();
+articles.create({ id: "A-1", title: "Generics Guide", status: "draft" });
+
+const updatedArticle = articles.update("A-1", { status: "published" });
+console.log(updatedArticle.status); // "published"
+console.log(articles.findById("A-1")?.title); // "Generics Guide"
+console.log(articles.remove("A-404")); // false
+
+*/
+
+// =============================================================================
+// ORANGE EXERCISE 09
+// Domain: Product Analytics - Typed Event Bus
+// Difficulty: Senior
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * "InsightKit" tracks product events. Each event name has a different payload:
+ *
+ *   - product:viewed needs productId and userId
+ *   - cart:item-added needs productId, quantity, and price
+ *   - checkout:completed needs orderId, revenue, and currency
+ *
+ * REQUIREMENTS
+ * ------------
+ * Define:
+ *
+ *   type AnalyticsEventMap = {
+ *     "product:viewed": { productId: string; userId: string };
+ *     "cart:item-added": { productId: string; quantity: number; price: number };
+ *     "checkout:completed": { orderId: string; revenue: number; currency: "EUR" | "USD" };
+ *   }
+ *
+ * Implement:
+ *
+ *   class TypedEventBus<TEvents extends Record<string, unknown>>
+ *     - on<K extends keyof TEvents>(eventName: K, handler: (payload: TEvents[K]) => void): void
+ *     - emit<K extends keyof TEvents>(eventName: K, payload: TEvents[K]): void
+ *     - listenerCount<K extends keyof TEvents>(eventName: K): number
+ *
+ * TASK
+ * ----
+ * Implement the event map and class.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 09
+ * ------------------------------------------------------------------
+
+const analyticsBus = new TypedEventBus<AnalyticsEventMap>();
+
+analyticsBus.on("cart:item-added", (payload) => {
+  console.log(payload.productId);
+  console.log(payload.quantity * payload.price);
+});
+
+analyticsBus.emit("cart:item-added", {
+  productId: "P-1",
+  quantity: 2,
+  price: 59,
+});
+
+console.log(analyticsBus.listenerCount("cart:item-added")); // 1
+
+// analyticsBus.emit("checkout:completed", { productId: "P-1" }); // TypeScript error
+
+*/
+
+// =============================================================================
+// RED EXERCISE 10
+// Domain: FinTech - Result-Based Transaction Pipeline
+// Difficulty: Hard
+// =============================================================================
+/**
+ * CONTEXT
+ * -------
+ * "PayFlow" processes payment transactions through reusable validation and
+ * transformation steps.
+ *
+ * The platform wants a type-safe pipeline where:
+ *
+ *   - each step receives one input type
+ *   - each step returns a Result with either a value or an error
+ *   - the next step can change the value type
+ *   - errors stay typed
+ *
+ * REQUIREMENTS
+ * ------------
+ * Define:
+ *
+ *   type Result<TValue, TError = string>
+ *     - { ok: true; value: TValue }
+ *     - { ok: false; error: TError }
+ *
+ *   type PipelineStep<TInput, TOutput, TError = string>
+ *     - (input: TInput) => Result<TOutput, TError>
+ *
+ * Implement:
+ *
+ *   runStep<TInput, TOutput, TError>(input, step)
+ *     - returns the step result
+ *
+ *   chainSteps<TInput, TMiddle, TOutput, TError>(input, first, second)
+ *     - runs first
+ *     - if first fails, return its error
+ *     - if first succeeds, pass first.value to second
+ *     - returns Result<TOutput, TError>
+ *
+ *   mapResult<TValue, TNext, TError>(result, mapper)
+ *     - if result fails, return same error
+ *     - if result succeeds, return ok result with mapper(result.value)
+ *
+ * TASK
+ * ----
+ * Implement all types and functions.
+ */
+
+// -> Write your implementation here
+
+/* ------------------------------------------------------------------
+ * TEST SCENARIO - Exercise 10
+ * ------------------------------------------------------------------
+
+type RawTransaction = {
+  transactionId: string;
+  amount: number;
+  currency: string;
+};
+
+type ValidTransaction = RawTransaction & {
+  currency: "EUR" | "USD";
+};
+
+type SettledTransaction = ValidTransaction & {
+  settlementId: string;
+};
+
+const validateTransaction: PipelineStep<RawTransaction, ValidTransaction> = (input) => {
+  if (input.amount <= 0) {
+    return { ok: false, error: "Amount must be positive" };
   }
 
-  revoke(role: TRole, permission: TPermission): void {
-    // TODO
-    throw new Error("TODO");
+  if (input.currency !== "EUR" && input.currency !== "USD") {
+    return { ok: false, error: "Unsupported currency" };
   }
 
-  can(role: TRole, permission: TPermission): boolean {
-    // TODO
-    throw new Error("TODO");
-  }
+  return { ok: true, value: input as ValidTransaction };
+};
+
+const settleTransaction: PipelineStep<ValidTransaction, SettledTransaction> = (input) => {
+  return {
+    ok: true,
+    value: {
+      ...input,
+      settlementId: `SET-${input.transactionId}`,
+    },
+  };
+};
+
+const result = chainSteps(
+  { transactionId: "TX-1", amount: 99, currency: "EUR" },
+  validateTransaction,
+  settleTransaction
+);
+
+if (result.ok) {
+  console.log(result.value.settlementId); // "SET-TX-1"
 }
 
+const display = mapResult(result, (tx) => `${tx.transactionId}: ${tx.amount} ${tx.currency}`);
+console.log(display); // { ok: true, value: "TX-1: 99 EUR" }
+
+*/
+
+// =============================================================================
+// MEGA PROBLEM - OmniMarket Commerce Platform
+// Covers ALL Chapter 4 Generics topics
+// =============================================================================
 /**
- * EXERCISE 10
- * Realtime cache with TTL:
- * create generic class TimedCache<TKey, TValue>.
- * - set(key, value, ttlMs)
- * - get(key, nowMs?) => undefined if expired/missing
- * - has(key, nowMs?) => boolean
- * - cleanup(nowMs?) => remove expired entries, return removed count
+ * ============================================================================
+ * CONTEXT - OmniMarket: Multi-Domain Commerce Infrastructure
+ * ============================================================================
+ *
+ * OmniMarket powers marketplace sellers, financial payouts, shipment tracking,
+ * customer support workflows, and analytics events.
+ *
+ * The platform wants reusable generic infrastructure instead of rebuilding the
+ * same repository, cache, pagination, patch, and event logic for every domain.
+ *
+ * The goal is to design a type-safe system where:
+ * - repositories preserve entity and id types
+ * - patch operations use Partial<T> without allowing id changes
+ * - selectors use keyof and indexed access types
+ * - API responses and results are generic discriminated unions
+ * - caches support any key/value pair
+ * - event names control payload types
+ * - service classes depend on reusable generic contracts
+ *
+ * ============================================================================
+ * WHAT TO BUILD
+ * ============================================================================
+ *
+ * SECTION A - Core Generic Types
+ * ------------------------------
+ *   interface Identified<TId>
+ *     - id: TId
+ *
+ *   type ApiResponse<TData, TError = string>
+ *     - { ok: true; data: TData; receivedAtMs: number }
+ *     - { ok: false; error: TError; receivedAtMs: number }
+ *
+ *   type PageResult<TItem>
+ *     - items: TItem[]
+ *     - page: number
+ *     - pageSize: number
+ *     - total: number
+ *
+ *   type SortDirection = "asc" | "desc"
+ *
+ *   type Patch<TEntity extends Identified<unknown>>
+ *     - Partial<Omit<TEntity, "id">>
+ *
+ * SECTION B - Generic Utility Functions
+ * -------------------------------------
+ *   success<TData>(data: TData, receivedAtMs = Date.now()): ApiResponse<TData>
+ *
+ *   failure<TError = string>(error: TError, receivedAtMs = Date.now()): ApiResponse<never, TError>
+ *
+ *   selectField<TEntity, TKey extends keyof TEntity>(entity, key): TEntity[TKey]
+ *
+ *   selectFields<TEntity, TKey extends keyof TEntity>(entity, keys): Pick<TEntity, TKey>
+ *
+ *   paginate<TItem>(items, page, pageSize): PageResult<TItem>
+ *
+ *   sortBy<TItem, TKey extends keyof TItem>(items, key, direction): TItem[]
+ *     - must not mutate original array
+ *     - should support string and number values
+ *
+ * SECTION C - Generic Repository Contract
+ * ---------------------------------------
+ *   interface Repository<TId, TEntity extends Identified<TId>>
+ *     - create(entity: TEntity): void
+ *     - update(id: TId, patch: Patch<TEntity>): TEntity
+ *     - findById(id: TId): TEntity | undefined
+ *     - list(): TEntity[]
+ *     - remove(id: TId): boolean
+ *
+ *   class InMemoryRepository<TId, TEntity extends Identified<TId>>
+ *     - implements Repository<TId, TEntity>
+ *     - stores entities in Map<TId, TEntity>
+ *     - create throws Error("Entity already exists: <id>") on duplicate
+ *     - update throws Error("Entity not found: <id>") when missing
+ *     - update cannot change id
+ *     - findById, update, and list return shallow copies
+ *
+ * SECTION D - Generic TTL Cache
+ * -----------------------------
+ *   class TtlCache<TKey, TValue>
+ *     - private store: Map<TKey, { value: TValue; expiresAtMs: number }>
+ *     - set(key, value, ttlMs, nowMs = Date.now()): void
+ *     - get(key, nowMs = Date.now()): TValue | undefined
+ *     - has(key, nowMs = Date.now()): boolean
+ *     - cleanup(nowMs = Date.now()): number
+ *
+ * SECTION E - Typed Event Bus
+ * ---------------------------
+ *   class EventBus<TEvents extends Record<string, unknown>>
+ *     - on<K extends keyof TEvents>(eventName: K, handler: (payload: TEvents[K]) => void): void
+ *     - emit<K extends keyof TEvents>(eventName: K, payload: TEvents[K]): void
+ *     - listenerCount<K extends keyof TEvents>(eventName: K): number
+ *
+ * SECTION F - Domain Models
+ * -------------------------
+ *   type Money = {
+ *     amount: number;
+ *     currency: "EUR" | "USD";
+ *   }
+ *
+ *   type Product = Identified<string> & {
+ *     sellerId: string;
+ *     name: string;
+ *     price: Money;
+ *     stock: number;
+ *     category: "electronics" | "books" | "fashion";
+ *   }
+ *
+ *   type Seller = Identified<string> & {
+ *     storeName: string;
+ *     rating: number;
+ *     verified: boolean;
+ *   }
+ *
+ *   type Payout = Identified<number> & {
+ *     sellerId: string;
+ *     amount: Money;
+ *     status: "pending" | "paid" | "failed";
+ *   }
+ *
+ *   type Shipment = Identified<string> & {
+ *     orderId: string;
+ *     carrier: "DHL" | "UPS" | "LaPoste";
+ *     status: "created" | "in_transit" | "delivered";
+ *   }
+ *
+ * SECTION G - Event Map
+ * ---------------------
+ *   type OmniMarketEvents = {
+ *     "product:created": { productId: string; sellerId: string };
+ *     "product:stock-low": { productId: string; stock: number };
+ *     "payout:paid": { payoutId: number; sellerId: string; amount: Money };
+ *     "shipment:delivered": { shipmentId: string; orderId: string };
+ *   }
+ *
+ * SECTION H - Generic Services
+ * ----------------------------
+ *   class CatalogService
+ *     - constructor(productRepository, eventBus, cache)
+ *     - createProduct(product): ApiResponse<Product>
+ *       saves product, emits "product:created", caches product
+ *     - patchProduct(id, patch): ApiResponse<Product>
+ *       updates product, emits "product:stock-low" when stock <= 5
+ *     - getProduct(id): ApiResponse<Product>
+ *       checks cache first, then repository
+ *     - listProducts(page, pageSize): ApiResponse<PageResult<Product>>
+ *
+ *   class SellerService
+ *     - constructor(sellerRepository)
+ *     - createSeller(seller): ApiResponse<Seller>
+ *     - getPublicSellerView(id): ApiResponse<Pick<Seller, "id" | "storeName" | "rating" | "verified">>
+ *
+ *   class PayoutService
+ *     - constructor(payoutRepository, eventBus)
+ *     - createPayout(payout): ApiResponse<Payout>
+ *     - markPaid(id): ApiResponse<Payout>
+ *       updates status to "paid" and emits "payout:paid"
+ *
+ *   class ShipmentService
+ *     - constructor(shipmentRepository, eventBus)
+ *     - createShipment(shipment): ApiResponse<Shipment>
+ *     - markDelivered(id): ApiResponse<Shipment>
+ *       updates status to "delivered" and emits "shipment:delivered"
+ *
+ * SECTION I - Reporting
+ * ---------------------
+ *   class ReportingService
+ *     - constructor(productRepository, sellerRepository, payoutRepository, shipmentRepository)
+ *     - getInventoryValueBySeller(sellerId): Money
+ *       sum product.price.amount * product.stock for seller's products
+ *     - getTopProductsByStock(limit): Product[]
+ *       sort by stock descending
+ *     - getPayoutsByStatus(status): Payout[]
+ *     - getDeliveredShipments(): Shipment[]
+ *
+ * SECTION J - FULL TEST SCENARIO
+ * ------------------------------
+ * Your implementation should support this scenario:
+ *
+ * const products = new InMemoryRepository<string, Product>();
+ * const sellers = new InMemoryRepository<string, Seller>();
+ * const payouts = new InMemoryRepository<number, Payout>();
+ * const shipments = new InMemoryRepository<string, Shipment>();
+ * const events = new EventBus<OmniMarketEvents>();
+ * const productCache = new TtlCache<string, Product>();
+ *
+ * events.on("product:stock-low", (payload) => {
+ *   console.log(`${payload.productId} is low: ${payload.stock}`);
+ * });
+ *
+ * const catalog = new CatalogService(products, events, productCache);
+ * const sellerService = new SellerService(sellers);
+ * const payoutService = new PayoutService(payouts, events);
+ * const shipmentService = new ShipmentService(shipments, events);
+ *
+ * sellerService.createSeller({
+ *   id: "S-1",
+ *   storeName: "TechStore",
+ *   rating: 4.8,
+ *   verified: true,
+ * });
+ *
+ * catalog.createProduct({
+ *   id: "P-1",
+ *   sellerId: "S-1",
+ *   name: "Mechanical Keyboard",
+ *   price: { amount: 129, currency: "EUR" },
+ *   stock: 10,
+ *   category: "electronics",
+ * });
+ *
+ * catalog.patchProduct("P-1", { stock: 3 });
+ * console.log(catalog.getProduct("P-1").ok); // true
+ *
+ * payoutService.createPayout({
+ *   id: 1,
+ *   sellerId: "S-1",
+ *   amount: { amount: 500, currency: "EUR" },
+ *   status: "pending",
+ * });
+ *
+ * payoutService.markPaid(1);
+ *
+ * shipmentService.createShipment({
+ *   id: "SHIP-1",
+ *   orderId: "O-1",
+ *   carrier: "DHL",
+ *   status: "created",
+ * });
+ *
+ * shipmentService.markDelivered("SHIP-1");
+ *
+ * const reporting = new ReportingService(products, sellers, payouts, shipments);
+ * console.log(reporting.getInventoryValueBySeller("S-1"));
+ * console.log(reporting.getTopProductsByStock(5).length);
+ * console.log(reporting.getPayoutsByStatus("paid").length);
+ * console.log(reporting.getDeliveredShipments().length);
+ *
+ * SOLID / DESIGN EXPECTATIONS
+ * ---------------------------
+ * - Repository logic must be generic and reused by all domain entities.
+ * - Cache logic must be generic and reusable for any key/value pair.
+ * - Event bus must be generic and event-name-safe.
+ * - Services must depend on generic contracts where possible.
+ * - Utility functions must preserve precise types instead of returning any.
+ * - Patch types must prevent id updates at compile time.
+ *
+ * TASK
+ * ----
+ * Implement OmniMarket from sections A through I.
  */
-export class TimedCache<TKey, TValue> {
-  private readonly store = new Map<TKey, { value: TValue; expiresAtMs: number }>();
 
-  set(key: TKey, value: TValue, ttlMs: number): void {
-    // TODO
-    throw new Error("TODO");
-  }
-
-  get(key: TKey, nowMs: number = Date.now()): TValue | undefined {
-    // TODO
-    throw new Error("TODO");
-  }
-
-  has(key: TKey, nowMs: number = Date.now()): boolean {
-    // TODO
-    throw new Error("TODO");
-  }
-
-  cleanup(nowMs: number = Date.now()): number {
-    // TODO
-    throw new Error("TODO");
-  }
-}
-
-/**
- * ============================================================
- * PROBLEM 1 (Design from scratch)
- * Generic Inventory System
- * ============================================================
- *
- * Create everything marked TODO:
- *
- * 1) Create enum `InventoryEventType` with:
- *    - Added
- *    - Removed
- *    - Updated
- *
- * 2) Create type `InventoryEvent<TId>`:
- *    {
- *      type: InventoryEventType;
- *      id: TId;
- *      atMs: number;
- *      note?: string;
- *    }
- *
- * 3) Create interface `EntityWithId<TId>` with property `id: TId`.
- *
- * 4) Create class `GenericInventory<TId, TItem extends EntityWithId<TId>>` with:
- *    - private items: Map<TId, TItem>
- *    - private history: InventoryEvent<TId>[]
- *
- *    Methods:
- *    - add(item: TItem, note?: string): void
- *      * throw if id already exists
- *      * store item and record Added event
- *
- *    - update(id: TId, patch: Partial<TItem>, note?: string): void
- *      * throw if id does not exist
- *      * merge existing + patch
- *      * do not allow id change during patch
- *      * record Updated event
- *
- *    - remove(id: TId, note?: string): boolean
- *      * remove item if exists
- *      * if removed, record Removed event
- *      * return true if removed else false
- *
- *    - get(id: TId): TItem | undefined
- *      * return a safe copy if object-like, otherwise direct value
- *
- *    - list(): TItem[]
- *      * return all items as copies (do not leak internal references)
- *
- *    - events(): ReadonlyArray<InventoryEvent<TId>>
- *      * return copy of history
- */
-
-// TODO: add your enum here
-
-// TODO: add your type here
-
-// TODO: add your interface here
-
-// TODO: add your class here
-
-/**
- * ============================================================
- * PROBLEM 2 (Design from scratch)
- * Generic Task Workflow Engine
- * ============================================================
- *
- * Create everything marked TODO:
- *
- * 1) Create enum `TaskState` with:
- *    - Todo
- *    - InProgress
- *    - Done
- *    - Blocked
- *
- * 2) Create interface `TaskRecord<TId, TMeta>`:
- *    {
- *      id: TId;
- *      title: string;
- *      state: TaskState;
- *      meta: TMeta;
- *      updatedAtMs: number;
- *    }
- *
- * 3) Create class `Workflow<TId, TMeta>`:
- *    - private tasks: Map<TId, TaskRecord<TId, TMeta>>
- *    - private allowedTransitions: Map<TaskState, Set<TaskState>>
- *
- *    Constructor:
- *    - initialize allowed transitions:
- *      Todo -> InProgress | Blocked
- *      InProgress -> Done | Blocked
- *      Blocked -> Todo | InProgress
- *      Done -> (none)
- *
- *    Methods:
- *    - create(task: Omit<TaskRecord<TId, TMeta>, "updatedAtMs">): void
- *      * throw if id exists
- *      * save with current timestamp
- *
- *    - move(id: TId, next: TaskState): void
- *      * throw if task missing
- *      * validate transition using allowedTransitions
- *      * if invalid, throw helpful error
- *      * update state + updatedAtMs
- *
- *    - get(id: TId): TaskRecord<TId, TMeta> | undefined
- *      * return copy
- *
- *    - listByState(state: TaskState): TaskRecord<TId, TMeta>[]
- *      * return copies
- *
- *    - countByState(): Map<TaskState, number>
- *      * return counts of current tasks per state
- */
-
-// TODO: add your enum here
-
-// TODO: add your interface here
-
-// TODO: add your class here
+// -> Write your OmniMarket implementation here

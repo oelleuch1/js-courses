@@ -1446,17 +1446,17 @@ interface IRoleHolder {
   addRole(role: Role): void;
 }
 
+// new User('id', 'email', 'Bob', )
+
 class User implements IIdentifiable, IRoleHolder {
-  public id: string;
-  public email: string;
-  public displayName: string;
   public createdAt: Date;
   public roles: Set<Role>;
 
-  constructor(id: string, email: string, displayName: string) {
-    this.id = id;
-    this.email = email;
-    this.displayName = displayName;
+  constructor(
+    public id: string, 
+    public email: string, 
+    public displayName: string,
+  ) {
     this.createdAt = new Date();
     this.roles = new Set();
   }
