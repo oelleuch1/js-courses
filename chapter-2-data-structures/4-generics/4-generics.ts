@@ -6,143 +6,7 @@
 // =============================================================================
 
 // =============================================================================
-// GREEN EXERCISE 01 - FILL IN THE BLANKS
-// Domain: Marketplace - Product Response Envelope
-// Difficulty: Easy
-// =============================================================================
-/**
- * CONTEXT
- * -------
- * You are building the catalog API for "ShopHub", an online marketplace.
- * Different endpoints return different payloads:
- *
- *   - one endpoint returns a Product
- *   - another endpoint returns a Seller
- *   - another endpoint returns an array of search results
- *
- * The API team wants one reusable response wrapper that keeps the exact type
- * of the payload.
- *
- * REQUIREMENTS
- * ------------
- * Create:
- *
- *   type ApiSuccess<TData>
- *     - ok: true
- *     - data: TData
- *     - receivedAtMs: number
- *
- * Implement:
- *
- *   buildSuccessResponse<TData>(data, receivedAtMs = Date.now())
- *     - returns an ApiSuccess<TData>
- *     - must not use any
- *
- * INSTRUCTIONS
- * ------------
- * Complete the TODOs. Do NOT change the public API.
- */
-
-export type ApiSuccess<TData> = {
-  ok: true;
-  data: TData;
-  receivedAtMs: number;
-};
-
-export function buildSuccessResponse<TData>(
-  data: TData,
-  receivedAtMs: number = Date.now()
-): ApiSuccess<TData> {
-  // TODO
-  throw new Error("TODO");
-}
-
-/* ------------------------------------------------------------------
- * TEST SCENARIO - Exercise 01
- * ------------------------------------------------------------------
-
-type MarketplaceProduct = {
-  id: string;
-  name: string;
-  price: number;
-};
-
-const response = buildSuccessResponse<MarketplaceProduct>(
-  { id: "P-1", name: "Mechanical Keyboard", price: 129 },
-  1000
-);
-
-console.log(response.ok); // true
-console.log(response.data.name); // "Mechanical Keyboard"
-console.log(response.receivedAtMs); // 1000
-
-*/
-
-// =============================================================================
-// GREEN EXERCISE 02 - FILL IN THE BLANKS
-// Domain: Finance - Portfolio Pair Builder
-// Difficulty: Easy
-// =============================================================================
-/**
- * CONTEXT
- * -------
- * "WealthBoard" stores portfolio values using typed key/value pairs.
- *
- * Examples:
- *   - stock symbol -> current price
- *   - account id -> balance
- *   - asset id -> risk score
- *
- * REQUIREMENTS
- * ------------
- * Implement:
- *
- *   createPair<TKey, TValue>(key, value)
- *     - returns a tuple [TKey, TValue]
- *
- *   createLookup<TKey, TValue>(entries)
- *     - accepts Array<[TKey, TValue]>
- *     - returns Map<TKey, TValue>
- *
- * INSTRUCTIONS
- * ------------
- * Complete the TODOs. Do NOT change the public API.
- */
-
-export function createPair<TKey, TValue>(
-  key: TKey,
-  value: TValue
-): [TKey, TValue] {
-  // TODO
-  throw new Error("TODO");
-}
-
-export function createLookup<TKey, TValue>(
-  entries: Array<[TKey, TValue]>
-): Map<TKey, TValue> {
-  // TODO
-  throw new Error("TODO");
-}
-
-/* ------------------------------------------------------------------
- * TEST SCENARIO - Exercise 02
- * ------------------------------------------------------------------
-
-const priceEntry = createPair("AAPL", 189.5);
-console.log(priceEntry[0]); // "AAPL"
-console.log(priceEntry[1]); // 189.5
-
-const prices = createLookup([
-  ["AAPL", 189.5],
-  ["MSFT", 420.1],
-]);
-
-console.log(prices.get("MSFT")); // 420.1
-
-*/
-
-// =============================================================================
-// GREEN EXERCISE 03
+// GREEN EXERCISE 01
 // Domain: Analytics - Paginated Dashboard Results
 // Difficulty: Easy
 // =============================================================================
@@ -185,7 +49,7 @@ console.log(prices.get("MSFT")); // 420.1
 // -> Write your implementation here
 
 /* ------------------------------------------------------------------
- * TEST SCENARIO - Exercise 03
+ * TEST SCENARIO - Exercise 01
  * ------------------------------------------------------------------
 
 const dashboardRows = [
@@ -199,164 +63,8 @@ console.log(firstPage.items.length); // 2
 console.log(firstPage.total); // 3
 console.log(firstPage.items[0].revenue); // 1200
 
-*/
-
 // =============================================================================
-// YELLOW EXERCISE 04 - FILL IN THE BLANKS
-// Domain: SaaS - Tenant Feature Configuration
-// Difficulty: Medium
-// =============================================================================
-/**
- * CONTEXT
- * -------
- * "CloudDesk" supports tenant-specific feature configuration.
- * A tenant can override some settings, but not all settings.
- *
- * REQUIREMENTS
- * ------------
- * Implement:
- *
- *   mergeTenantConfig<TConfig extends Record<string, unknown>>(defaults, overrides)
- *     - defaults is a complete TConfig
- *     - overrides is Partial<TConfig>
- *     - returns a complete TConfig
- *     - does not mutate defaults
- *
- * INSTRUCTIONS
- * ------------
- * Complete the TODO. Do NOT change the public API.
- */
-
-export function mergeTenantConfig<TConfig extends Record<string, unknown>>(
-  defaults: TConfig,
-  overrides: Partial<TConfig>
-): TConfig {
-  // TODO
-  throw new Error("TODO");
-}
-
-/* ------------------------------------------------------------------
- * TEST SCENARIO - Exercise 04
- * ------------------------------------------------------------------
-
-const config = mergeTenantConfig(
-  { analytics: true, seats: 10, region: "eu" },
-  { seats: 25 }
-);
-
-console.log(config.analytics); // true
-console.log(config.seats); // 25
-console.log(config.region); // "eu"
-
-*/
-
-// =============================================================================
-// YELLOW EXERCISE 05
-// Domain: Marketplace - Entity Indexing by Typed Id
-// Difficulty: Medium
-// =============================================================================
-/**
- * CONTEXT
- * -------
- * ShopHub needs fast lookup maps for products, sellers, and orders.
- * Some entities use string ids. Others use number ids.
- *
- * REQUIREMENTS
- * ------------
- * Define:
- *
- *   interface EntityWithId<TId>
- *     - id: TId
- *
- * Implement:
- *
- *   indexEntities<TId, TEntity extends EntityWithId<TId>>(items)
- *     - returns Map<TId, TEntity>
- *     - if duplicate ids appear, the latest item wins
- *
- * TASK
- * ----
- * Implement the interface and function.
- */
-
-// -> Write your implementation here
-
-/* ------------------------------------------------------------------
- * TEST SCENARIO - Exercise 05
- * ------------------------------------------------------------------
-
-const productIndex = indexEntities([
-  { id: "P-1", name: "Keyboard", price: 129 },
-  { id: "P-2", name: "Mouse", price: 59 },
-  { id: "P-1", name: "Keyboard Pro", price: 179 },
-]);
-
-console.log(productIndex.get("P-1")?.name); // "Keyboard Pro"
-
-const orderIndex = indexEntities([
-  { id: 1001, total: 300 },
-  { id: 1002, total: 450 },
-]);
-
-console.log(orderIndex.get(1002)?.total); // 450
-
-*/
-
-// =============================================================================
-// YELLOW EXERCISE 06
-// Domain: Healthcare - Safe Patient Field Reader
-// Difficulty: Medium
-// =============================================================================
-/**
- * CONTEXT
- * -------
- * "CareBoard" displays patient summaries. Components need to read fields from
- * different patient-related models without passing invalid field names.
- *
- * REQUIREMENTS
- * ------------
- * Implement:
- *
- *   getField<TRecord, TKey extends keyof TRecord>(record, key)
- *     - returns record[key]
- *     - return type must be TRecord[TKey]
- *
- *   setField<TRecord, TKey extends keyof TRecord>(record, key, value)
- *     - value must be TRecord[TKey]
- *     - returns a new object
- *     - does not mutate the input record
- *
- * TASK
- * ----
- * Implement both functions.
- */
-
-// -> Write your implementation here
-
-/* ------------------------------------------------------------------
- * TEST SCENARIO - Exercise 06
- * ------------------------------------------------------------------
-
-const patient = {
-  id: "PAT-1",
-  fullName: "Alice Martin",
-  age: 34,
-  insured: true,
-};
-
-const age = getField(patient, "age");
-console.log(age); // 34
-
-const updatedPatient = setField(patient, "insured", false);
-console.log(updatedPatient.insured); // false
-console.log(patient.insured); // true
-
-// setField(patient, "age", "old"); // should be a TypeScript error
-
-*/
-
-// =============================================================================
-// ORANGE EXERCISE 07
+// ORANGE EXERCISE 02
 // Domain: Logistics - Generic Priority Queue
 // Difficulty: Senior
 // =============================================================================
@@ -401,7 +109,7 @@ console.log(patient.insured); // true
 // -> Write your implementation here
 
 /* ------------------------------------------------------------------
- * TEST SCENARIO - Exercise 07
+ * TEST SCENARIO - Exercise 02
  * ------------------------------------------------------------------
 
 type DeliveryJob = {

@@ -541,6 +541,22 @@ Utility types become much more useful when combined with generics.
 
 ### `Partial<T>`
 
+type User = {
+id: string,
+email: string,
+fullName: string
+}
+
+type PartialUser = Partial<User>
+
+PartialUser = {
+id?: string,
+email?: string,
+fullName?: string
+}
+
+const patchUser: PartialUser = { id: "2" }
+
 `Partial<T>` makes every property optional.
 
 ```ts
@@ -552,14 +568,18 @@ type UserProfile = {
 
 function patchProfile<T extends { id: string }>(
   profile: T,
-  patch: Partial<T>,
+  patch: Partial<Omit<T, 'id'>>,
 ): T {
   return {
     ...profile,
     ...patch,
-    id: profile.id,
   };
 }
+
+const user: UserProfile = { id: "2", displayName: "Bob", city: "Paris" };
+const patchedUser: Partial<Omit<UserProfile, 'id'>> = { displayName: "Alice", city: "Munich", id: "3" };
+
+patchProfile<UserProfile>(user, patchedUser); =>  { id: "2", displayName: "Alice", city: "Paris" };
 ```
 
 This is common for update endpoints.
@@ -613,6 +633,33 @@ const publicProduct = selectFields(
   ["id", "name", "price"],
 );
 ```
+
+Object Typing:
+
+interface IUser {
+id: string,
+name: string
+}
+
+type User = {
+id: string,
+name: string
+}
+
+const user: IUser = { ... }
+const user: User = { ... }
+
+type User = {
+id: number,
+name: string
+}
+
+type IndexByUser = Record<Pick<User, 'id'>, User>
+
+const indexByUser = {
+1: { id: "1", name: "Bob" },
+2: { id: "2", name: "Alice" },
+}
 
 ### `Record<K, V>`
 
@@ -721,6 +768,12 @@ Forms are a strong use case for `keyof` generics.
 ```ts
 type FieldError<TModel> = Partial<Record<keyof TModel, string>>;
 
+type Model = { id: string; value: string, age: number };
+
+FieldError<Model> => { id?: string, value?: string, age?: string }
+
+getValue('age') =>
+
 class FormState<TModel extends Record<string, unknown>> {
   constructor(
     private values: TModel,
@@ -760,6 +813,8 @@ const checkoutForm = new FormState<CheckoutForm>({
 
 checkoutForm.setValue("quantity", 2);
 // checkoutForm.setValue("quantity", "two"); // invalid
+
+// checkoutForm.setError('age', 'Age is invalid') // invalid
 ```
 
 ---
@@ -869,6 +924,15 @@ function goodGet<T, K extends keyof T>(obj: T, key: K): T[K] {
 function risky<T>(value: unknown): T {
   return value as T;
 }
+
+const userId: string = 1 as string;
+userId.substring(1, 3); // runtime Error
+
+const value = risky<number>("2.002"); => value type is number
+
+
+// 1.0235.toFixed(2) => "1.02"
+value.toFixed(2); // runtime Error
 ```
 
 This is not real type safety. It is just a promise to the compiler.

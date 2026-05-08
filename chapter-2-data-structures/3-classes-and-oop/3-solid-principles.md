@@ -163,6 +163,8 @@ class MarketplaceOrder extends Order {
   }
 }
 
+class StandartOrder extends Order {}
+
 function completeOrder(order: Order): void {
   order.pay();
   order.ship();
@@ -177,6 +179,7 @@ Good: model the workflow more precisely. A marketplace order is still an order, 
 interface Order {
   id: string;
   total: number;
+  //hasBigTotal(): boolean;
 }
 
 interface PayableOrder extends Order {
@@ -188,7 +191,11 @@ interface ShippableOrder extends Order {
 }
 
 class FullFilmentOrder implements PayableOrder, ShippableOrder {
-  constructor(public readonly id: string, public readonly total: number) {}
+  constructor(public readonly id: string, public readonly total: number) { }
+
+  hasBigTotal(): nboolea () {
+    return this.total > 1000;
+  }
 
   pay(): void {
     console.log(`Charging ${this.total}`);
@@ -199,8 +206,10 @@ class FullFilmentOrder implements PayableOrder, ShippableOrder {
   }
 }
 
-class MarketplaceOrder implements PayableOrder {
-  constructor(public readonly id: string, public readonly total: number) {}
+class MarketplaceOrder extends Order implements PayableOrder {
+  constructor(public readonly id: string, public readonly total: number) {
+    super(id, total);
+  }
 
   pay(): void {
     console.log(`Charging ${this.total}`);
