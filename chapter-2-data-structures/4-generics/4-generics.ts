@@ -624,3 +624,160 @@ console.log(display); // { ok: true, value: "TX-1: 99 EUR" }
  */
 
 // -> Write your OmniMarket implementation here
+
+interface Identified<TId> {
+  id: TId;
+}
+
+type ApiResponse<TData, TError = string> =
+  | { ok: true; data: TData; receivedAtMs: number }
+  | { ok: false; error: TError; receivedAtMs: number };
+
+type PageResult<TItem> = {
+  items: TItem[];
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
+type SortDirection = "asc" | "desc";
+
+type Patch<TEntity extends Identified<unknown>> = Partial<Omit<TEntity, "id">>;
+
+const success = <TData>(
+  data: TData,
+  receivedAtMs = Date.now(),
+): ApiResponse<TData> => {
+  return { ok: true, data, receivedAtMs };
+};
+
+const failure = <TError = string>(
+  error: TError,
+  receivedAtMs = Date.now(),
+): ApiResponse<never, TError> => {
+  return { ok: false, error, receivedAtMs };
+};
+
+const selectField = <TEntity, TKey extends keyof TEntity>(
+  entity: TEntity,
+  key: TKey,
+): TEntity[TKey] => {
+  return entity[key];
+};
+
+// not sure how to implement this one
+// selectFields<TEntity, TKey extends keyof TEntity>(entity, keys): Pick<TEntity, TKey>
+const selectFields = <TEntity, TKey extends keyof TEntity>(
+  entity: TEntity,
+  keys: TKey[],
+): Pick<TEntity, TKey> => {
+  return keys.reduce(
+    (acc, key) => {
+      acc[key] = entity[key];
+      return acc;
+    },
+    {} as Pick<TEntity, TKey>,
+  );
+};
+
+const paginate = <TItem>(
+  items: TItem[],
+  page: number,
+  pageSize: number,
+): PageResult<TItem> => {
+  return {
+    items: items.slice((page - 1) * pageSize, page * pageSize),
+    page,
+    pageSize,
+    total: items.length,
+  };
+};
+
+// not finished
+const sortBy = <TItem, TKey extends keyof TItem>(
+  items: TItem[],
+  key: TKey,
+  direction: SortDirection,
+): TItem[] => {};
+
+interface Repository<TId, TEntity extends Identified<TId>> {
+  create(entity: TEntity): void;
+  update(id: TId, patch: Patch<TEntity>): TEntity;
+  findById(id: TId): TEntity | undefined;
+  list(): TEntity[];
+  remove(id: TId): boolean;
+}
+
+class InMemoryRepository<
+  TId,
+  TEntity extends Identified<TId>,
+> implements Repository<TId, TEntity> {
+  private readonly entities = new Map<TId, TEntity>();
+
+  create(entity: TEntity): void {
+    if (this.entities.has(entity.id)) {
+      throw new Error(`Entity already exists: ${entity.id}`);
+    }
+    this.entities.set(entity.id, entity);
+  }
+
+  update(id: TId, patch: Patch<TEntity>): TEntity {
+    const entity = this.findById(id);
+    if (!entity) {
+      throw new Error(`Entity not found: ${id}`);
+    }
+    return { ...entity, ...patch };
+  }
+
+  findById(id: TId): TEntity | undefined {
+    return this.entities.get(id);
+  }
+
+  list(): TEntity[] {
+    return Array.from(this.entities.values());
+  }
+}
+
+class TtlCache<TKey, TValue> {
+  private readonly store = new Map<
+    TKey,
+    { value: TValue; expiresAtMs: number }
+  >();
+  private readonly cleanupInterval: number;
+
+  constructor(cleanupInterval: number) {
+    this.store = new Map<TKey, { value: TValue; expiresAtMs: number }>();
+    this.cleanupInterval = cleanupInterval;
+  }
+
+  set(key: TKey, value: TValue, ttlMs: number, nowMs = Date.now()): void {
+    this.store.set(key, { value, expiresAtMs: nowMs + ttlMs });
+  }
+
+  get(key: TKey, nowMs = Date.now()): TValue | undefined {
+    return this.store.get(key)?.value;
+  }
+
+  has(key: TKey, nowMs = Date.now()): boolean {
+    const entry = this.store.get(key);
+    return entry !== undefined && entry.expiresAtMs > nowMs;
+  }
+}
+
+// *
+// * SECTION D - Generic TTL Cache
+// * -----------------------------
+// *   class TtlCache<TKey, TValue>
+// *     - private store: Map<TKey, { value: TValue; expiresAtMs: number }>
+// *     - set(key, value, ttlMs, nowMs = Date.now()): void
+// *     - get(key, nowMs = Date.now()): TValue | undefined
+// *     - has(key, nowMs = Date.now()): boolean
+// *     - cleanup(nowMs = Date.now()): number
+// *
+// * SECTION E - Typed Event Bus
+// * ---------------------------
+// *   class EventBus<TEvents extends Record<string, unknown>>
+// *     - on<K extends keyof TEvents>(eventName: K, handler: (payload: TEvents[K]) => void): void
+// *     - emit<K extends keyof TEvents>(eventName: K, payload: TEvents[K]): void
+// *     - listenerCount<K extends keyof TEvents>(eventName: K): number
+// *
