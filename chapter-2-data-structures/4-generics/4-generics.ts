@@ -698,7 +698,17 @@ const sortBy = <TItem, TKey extends keyof TItem>(
   items: TItem[],
   key: TKey,
   direction: SortDirection,
-): TItem[] => {};
+): TItem[] => {
+  const itemsCopy = [...items];
+  // copy array
+  // if first < second return -1
+  // if first is > second return 1
+  // if first is equal to second return 0
+  // if direction is desc pass b a instead of a b into compare (swap order)
+  // return sorted copy
+
+  throw new Error("sortBy not implemented");
+};
 
 interface Repository<TId, TEntity extends Identified<TId>> {
   create(entity: TEntity): void;
@@ -762,17 +772,27 @@ class TtlCache<TKey, TValue> {
     const entry = this.store.get(key);
     return entry !== undefined && entry.expiresAtMs > nowMs;
   }
+
+  cleanup(nowMs = Date.now()): number {
+    let removed = 0;
+    for (const [key, entry] of this.store) {
+      if (entry.expiresAtMs <= nowMs) {
+        this.store.delete(key);
+        removed += 1;
+      }
+    }
+    return removed;
+  }
 }
 
-// *
-// * SECTION D - Generic TTL Cache
-// * -----------------------------
-// *   class TtlCache<TKey, TValue>
-// *     - private store: Map<TKey, { value: TValue; expiresAtMs: number }>
-// *     - set(key, value, ttlMs, nowMs = Date.now()): void
-// *     - get(key, nowMs = Date.now()): TValue | undefined
-// *     - has(key, nowMs = Date.now()): boolean
-// *     - cleanup(nowMs = Date.now()): number
+// not finished
+class EventBus<TEvents extends Record<string, unknown>> {
+  on<K extends keyof TEvents>(
+    eventName: K,
+    handler: (payload: TEvents[K]) => void,
+  ): void {}
+}
+
 // *
 // * SECTION E - Typed Event Bus
 // * ---------------------------
@@ -781,3 +801,125 @@ class TtlCache<TKey, TValue> {
 // *     - emit<K extends keyof TEvents>(eventName: K, payload: TEvents[K]): void
 // *     - listenerCount<K extends keyof TEvents>(eventName: K): number
 // *
+
+type Money = {
+  amount: number;
+  currency: "EUR" | "USD";
+};
+
+type Product = Identified<string> & {
+  sellerId: string;
+  name: string;
+  price: Money;
+  stock: number;
+  category: "electronics" | "books" | "fashion";
+};
+
+type Seller = Identified<string> & {
+  storeName: string;
+  rating: number;
+  verified: boolean;
+};
+
+type Payout = Identified<number> & {
+  sellerId: string;
+  amount: Money;
+  status: "pending" | "paid" | "failed";
+};
+
+type Shipment = Identified<string> & {
+  orderId: string;
+  carrier: "DHL" | "UPS" | "LaPoste";
+  status: "created" | "in_transit" | "delivered";
+};
+
+type OmniMarketEvents = {
+  "product:created": { productId: string; sellerId: string };
+  "product:stock-low": { productId: string; stock: number };
+  "payout:paid": { payoutId: number; sellerId: string; amount: Money };
+  "shipment:delivered": { shipmentId: string; orderId: string };
+};
+
+class CatalogService {
+  constructor(
+    public productRepository: Repository<string, string>,
+    public eventBus: EventBus<OmniMarketEvents>,
+    public cache: TtlCache<string, Product>,
+  ) {
+    this.productRepository = productRepository;
+    this.eventBus = eventBus;
+    this.cache = cache;
+  }
+
+  createProduct(product: Product): ApiResponse<Product> {
+    // try productRepository create with product
+    // if create throws catch error return failure with message string
+    // emit eventBus product created payload product id and seller id
+    // cache set key product id value product ttl pick a number ms
+    // return success with product
+    throw new Error("createProduct not implemented");
+  }
+}
+// *   class CatalogService
+// *     - constructor(productRepository, eventBus, cache)
+// *     - createProduct(product): ApiResponse<Product>
+// *       saves product, emits "product:created", caches product
+// *     - patchProduct(id, patch): ApiResponse<Product>
+// *       updates product, emits "product:stock-low" when stock <= 5
+// *     - getProduct(id): ApiResponse<Product>
+// *       checks cache first, then repository
+// *     - listProducts(page, pageSize): ApiResponse<PageResult<Product>>
+
+class SellerService {
+  constructor(public sellerRepository: Repository<string, Seller>) {
+    this.sellerRepository = sellerRepository;
+  }
+
+  createSeller(seller: Seller): ApiResponse<Seller> {
+    try {
+      this.sellerRepository.create(seller);
+      return success(seller);
+    } catch (error) {
+      const message = "Could not create seller";
+      return failure(message);
+    }
+  }
+
+  getPublicSellerView(
+    id: string,
+  ): ApiResponse<Pick<Seller, "id" | "storeName" | "rating" | "verified">> {
+    const seller = this.sellerRepository.findById(id);
+    if (!seller) {
+      return failure(`Seller not found: ${id}`);
+    }
+    return success({
+      id: seller.id,
+      storeName: seller.storeName,
+      rating: seller.rating,
+      verified: seller.verified,
+    });
+  }
+}
+
+// *   class PayoutService
+// *     - constructor(payoutRepository, eventBus)
+// *     - createPayout(payout): ApiResponse<Payout>
+// *     - markPaid(id): ApiResponse<Payout>
+// *       updates status to "paid" and emits "payout:paid"
+// *
+// *   class ShipmentService
+// *     - constructor(shipmentRepository, eventBus)
+// *     - createShipment(shipment): ApiResponse<Shipment>
+// *     - markDelivered(id): ApiResponse<Shipment>
+// *       updates status to "delivered" and emits "shipment:delivered"
+
+// * SECTION I - Reporting
+// * ---------------------
+// *   class ReportingService
+// *     - constructor(productRepository, sellerRepository, payoutRepository, shipmentRepository)
+// *     - getInventoryValueBySeller(sellerId): Money
+// *       sum product.price.amount * product.stock for seller's products
+// *     - getTopProductsByStock(limit): Product[]
+// *       sort by stock descending
+// *     - getPayoutsByStatus(status): Payout[]
+// *     - getDeliveredShipments(): Shipment[]
